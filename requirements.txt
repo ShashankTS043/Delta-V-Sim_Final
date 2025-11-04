@@ -1,0 +1,11 @@
+# Core Simulation
+mesa
+simpy
+
+# Data Handling
+numpy
+pandas
+
+# Visualization (for your teammate)
+matplotlib
+pygame
