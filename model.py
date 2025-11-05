@@ -1,27 +1,39 @@
+import random
 from mesa import Model
-# from mesa.time import RandomActivation  <-- DELETE THIS LINE
-from agent import F1Agent # Import the agent you just defined
+# from mesa.agent import AgentSet  <-- WE NO LONGER NEED THIS
+from agent import F1Agent
+from track_graph import build_bahrain_track
 
 class DeltaVModel(Model):
     """The main model running the Delta-V simulation."""
     
     def __init__(self, num_agents):
-        super().__init__()
-        self.num_agents = num_agents
-        # self.schedule = RandomActivation(self)  <-- DELETE THIS LINE
+        # --- Start of Manual Initialization ---
+        self.seed = 12345
+        self.random = random.Random(self.seed)
+        self.running = True
+        self.space = None 
+        # --- End of Manual Initialization ---
         
-        # Create agents
+        self.num_agents = num_agents
+        self.time_step = 0.1  # Simulate 10 times per second (100ms)
+        
+        # --- Build the Environment ---
+        self.track = build_bahrain_track()
+        
+        # --- Create Agents in our OWN list ---
+        # We are using a simple Python list, not an AgentSet
+        self.f1_agents = []
         for i in range(self.num_agents):
-            # The agent is automatically added to the model
-            # when its __init__ is called.
             a = F1Agent(i, self)
-            # self.schedule.add(a)  <-- DELETE THIS LINE
+            self.f1_agents.append(a)
 
     def step(self):
         """Execute one time step of the simulation."""
         
-        # This is the NEW way to run all agent steps in a random order
-        self.agents.shuffle_do("step")
+        # Shuffle the list of agents
+        self.random.shuffle(self.f1_agents)
         
-        # This is where we will also process SimPy events
-        # and collect data for the leaderboard
+        # Manually call step() on each agent in our list
+        for agent in self.f1_agents:
+            agent.step()
