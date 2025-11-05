@@ -4,7 +4,7 @@
 
 A lightweight, agent-based simulator built in Python to model the complex strategic landscape of the 2026 Formula 1 regulations.
 
-![Bahrain Circuit Graph](httpsloc://imageof(Bahrain%20F1%20track%20layout%20diagram))
+
 
 ---
 
