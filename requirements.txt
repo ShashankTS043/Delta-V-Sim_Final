@@ -1,6 +1,7 @@
 # Core Simulation
 mesa
 simpy
+networkx
 
 # Data Handling
 numpy
