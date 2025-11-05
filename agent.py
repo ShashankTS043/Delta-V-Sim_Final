@@ -46,6 +46,9 @@ class F1Agent(Agent):
         
     def make_decision(self):
         """Agent's "brain" decides what to do."""
+        if self.status == "OUT_OF_ENERGY":
+            self.velocity = 0
+            return
         current_node = self.position[0]
         
         successors = list(self.model.track.successors(current_node))
@@ -93,6 +96,11 @@ class F1Agent(Agent):
         else:
             self.position = (current_node, progress_on_edge)
 
-        if self.velocity > 0:
+        if self.battery_soc > 0:
             cost = (self.velocity / 10000.0) 
             self.battery_soc -= cost
+        else:
+            # Out of energy!
+            self.battery_soc = 0
+            self.velocity = 0 # Stop the car
+            self.status = "OUT_OF_ENERGY"
