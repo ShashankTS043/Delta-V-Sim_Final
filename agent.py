@@ -32,7 +32,7 @@ class F1Agent(Agent):
         self.strategy = {
             "top_speed": 85.0, # m/s (approx 306 kph)
             "corner_speed": 40.0, # m/s (approx 144 kph)
-            
+            "vsc_speed": 30.0, # <-- ADD THIS (30 m/s is ~108 kph)
             "c_1_power": 0.000001,    # Tuned to be much lower
             "c_2_z_mode_drag": 0.0001, # Also tuned lower
             "c_2_x_mode_drag": 0.00003, # Also tuned lower
@@ -96,7 +96,15 @@ class F1Agent(Agent):
             self.aero_mode = "Z-MODE"
             return
         
-        # --- 2. Get current track segment data ---
+        # --- 2. NEW VSC CHECK (Guard Clause) ---
+        if self.model.vsc_active:
+            self.velocity = self.strategy['vsc_speed']
+            self.aero_mode = "Z-MODE" # VSC requires high-grip
+            self.mom_active = False # No overtaking
+            return
+        # --- END OF VSC CHECK ---
+        
+        # --- 3. Get current track segment data ---
         current_node = self.position[0]
         successors = list(self.model.track.successors(current_node))
         if not successors:

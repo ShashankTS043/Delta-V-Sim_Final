@@ -1,33 +1,22 @@
 from model import DeltaVModel
 
-# --- Simulation Parameters ---
+MAX_TIME_SECONDS = 100 # Run for 100 seconds
 NUM_AGENTS = 2
-MAX_STEPS = 1000
 
-print("--- Starting Delta-V Simulation (Bahrain Circuit) ---")
+print(f"--- Starting Delta-V Simulation (SimPy, {MAX_TIME_SECONDS}s) ---")
 
 # 1. Create the Model
+#    (This automatically creates the SimPy env and starts the processes)
 model = DeltaVModel(num_agents=NUM_AGENTS)
 
-# --- Customize agents using our NEW 'f1_agents' list ---
+# 2. Customize agents for an overtake test
 model.f1_agents[0].unique_id = "Ocon"
-model.f1_agents[0].strategy['top_speed'] = 85.0  # m/s
+model.f1_agents[0].strategy['top_speed'] = 83.0  # m/s (The car in front)
 
 model.f1_agents[1].unique_id = "Bearman"
-model.f1_agents[1].strategy['top_speed'] = 83.0  # m/s (slightly slower)
+model.f1_agents[1].strategy['top_speed'] = 84.0  # m/s (The chasing car)
 
-
-# 2. Run the Simulation
-for i in range(MAX_STEPS):
-    print(f"\n--- Step {i} ---")
-    model.step()
-    
-    # --- Print agent states using our NEW 'f1_agents' list ---
-    for agent in model.f1_agents:
-        print(f"  > Agent {agent.unique_id}: \
-Node {agent.position[0]}, \
-Progress: {agent.position[1]*100:.1f}%, \
-V: {agent.velocity} m/s, \
-SOC: {agent.battery_soc*100:.2f}%")
+# 3. Run the SimPy environment
+model.env.run(until=MAX_TIME_SECONDS)
 
 print("\n--- Simulation Complete ---")
