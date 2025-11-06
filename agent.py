@@ -169,26 +169,55 @@ class F1Agent(Agent):
             self.position = (current_node, progress_on_edge)
 
         # --- 5. ADVANCED 2026 ENERGY COST MODEL ---
-        C1_POWER = self.strategy['c_1_power']
+        # --- 5. ADVANCED 2026 ENERGY/REGEN MODEL ---
         
+        # Get constants from our strategy
+        C1_POWER = self.strategy['c_1_power']
+        REGEN_EFFICIENCY = self.strategy['c_regen_efficiency']
+
+        # --- A. ENERGY DRAIN (On a straight, in X-Mode) ---
         if self.aero_mode == "X-MODE":
             C2_AERO_DRAG = self.strategy['c_2_x_mode_drag']
-        else: # Z-MODE
-            C2_AERO_DRAG = self.strategy['c_2_z_mode_drag']
+            
+            # E = C1*v^2 + C2*Drag
+            power_cost = C1_POWER * (self.velocity * self.velocity)
+            drag_cost = C2_AERO_DRAG
+            energy_cost_per_step = (power_cost + drag_cost) * self.model.time_step
 
-        power_cost = C1_POWER * (self.velocity * self.velocity)
-        drag_cost = C2_AERO_DRAG
+            # Add MOM cost if active
+            if self.mom_active:
+                energy_cost_per_step += self.strategy['mom_energy_cost']
+
+            # Apply the cost
+            if self.battery_soc > energy_cost_per_step:
+                self.battery_soc -= energy_cost_per_step
+            else:
+                self.battery_soc = 0
+                self.velocity = 0
+                self.status = "OUT_OF_ENERGY"
         
-        energy_cost_per_step = (power_cost + drag_cost) * self.model.time_step
-        
-        # --- 6. ADD MOM COST ---
-        if self.mom_active:
-            energy_cost_per_step += self.strategy['mom_energy_cost']
-        
-        # --- 7. Apply the cost and check if we ran out ---
-        if self.battery_soc > energy_cost_per_step:
-            self.battery_soc -= energy_cost_per_step
-        else:
-            self.battery_soc = 0
-            self.velocity = 0
-            self.status = "OUT_OF_ENERGY"
+        # --- B. ENERGY REGENERATION (In a corner, in Z-Mode) ---
+        else: # We are in "Z-MODE" (braking for a corner)
+            # Regen is proportional to braking (approximated by corner speed)
+            energy_gained = (self.velocity / 50.0) * REGEN_EFFICIENCY * self.model.time_step
+            
+            if self.battery_soc < 1.0: # Can't charge over 100%
+                self.battery_soc += energy_gained
+                if self.battery_soc > 1.0:
+                    self.battery_soc = 1.0
+            
+            # --- C. Z-MODE (CORNER) ENERGY DRAIN ---
+            # It still costs energy to move through a corner, just less
+            # We'll use the Z-Mode drag constant
+            C2_AERO_DRAG = self.strategy['c_2_z_mode_drag']
+            power_cost = C1_POWER * (self.velocity * self.velocity)
+            drag_cost = C2_AERO_DRAG
+            
+            energy_cost_per_step = (power_cost + drag_cost) * self.model.time_step
+            
+            if self.battery_soc > energy_cost_per_step:
+                self.battery_soc -= energy_cost_per_step
+            else:
+                self.battery_soc = 0
+                self.velocity = 0
+                self.status = "OUT_OF_ENERGY"
