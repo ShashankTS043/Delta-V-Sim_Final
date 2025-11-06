@@ -1,6 +1,6 @@
 import random
 import json
-import simpy  # For the event-driven "Race Master"
+import simpy
 from mesa import Model
 from agent import F1Agent
 from track_graph import build_bahrain_track
@@ -11,40 +11,48 @@ class DeltaVModel(Model):
     This class holds the SimPy environment, the track, and the list of agents.
     """
     
-    def __init__(self, num_agents):
+    def __init__(self, config_file_path):
         # --- Start of Manual Initialization ---
-        # We manually initialize the model to bypass Mesa's super() bugs
         self.seed = 12345
         self.random = random.Random(self.seed)
         self.running = True
         self.space = None 
-        self.step_count = 0 # Our simple step counter
+        self.step_count = 0 
         # --- End of Manual Initialization ---
         
-        # --- SimPy Environment Setup ---
-        self.env = simpy.Environment() # This is our new "master clock"
-        self.vsc_active = False # Global flag for VSC status
+        # --- Load Configuration ---
+        with open(config_file_path, 'r') as f:
+            self.config = json.load(f)
+            
+        sim_params = self.config['simulation_params']
+        driver_roster = self.config['driver_roster']
         
-        self.num_agents = num_agents
-        self.time_step = 0.1  # We simulate 10 times per second (100ms)
+        # --- SimPy Environment Setup ---
+        self.env = simpy.Environment() 
+        self.vsc_active = False 
+        
+        self.num_agents = len(driver_roster)
+        self.time_step = sim_params['time_step']
         
         # --- Build the Environment ---
         self.track = build_bahrain_track()
-        
-        # Calculate total track length, used by agents for gap detection
         self.track_length = sum(data['length'] for u, v, data in self.track.edges(data=True))
         
-        # --- Create Agents ---
-        # We use a simple Python list to avoid Mesa's buggy AgentSet
+        # --- Create Agents from Roster ---
         self.f1_agents = []
-        for i in range(self.num_agents):
-            a = F1Agent(i, self)
+        for driver_config in driver_roster:
+            # Pass the agent its specific strategy config
+            a = F1Agent(
+                unique_id=driver_config['unique_id'], 
+                model=self, 
+                strategy_config=driver_config['strategy']
+            )
+            a.team = driver_config.get('team', 'Independent') # Optional: Add team name
             self.f1_agents.append(a)
             
         # --- Start SimPy Processes ---
-        # These "co-routines" run in parallel.
-        self.env.process(self.run_simulation_steps()) # The main agent update loop
-        self.env.process(self.race_master_events())   # The VSC event injector
+        self.env.process(self.run_simulation_steps())
+        self.env.process(self.race_master_events())
 
     def run_simulation_steps(self):
         """

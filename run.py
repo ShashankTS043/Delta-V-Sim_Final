@@ -1,20 +1,32 @@
+import sys
+import json
 from model import DeltaVModel
 
-MAX_TIME_SECONDS = 100 # Run for 100 seconds
-NUM_AGENTS = 2
+# --- NEW: Run with a config file ---
+# Default to our template, but allow a command-line argument
+CONFIG_FILE = "config_template.json"
+if len(sys.argv) > 1:
+    CONFIG_FILE = sys.argv[1]
 
-print(f"--- Starting Delta-V Simulation (SimPy, {MAX_TIME_SECONDS}s) ---")
+# We get max time from the config file now
+try:
+    with open(CONFIG_FILE, 'r') as f:
+        config = json.load(f)
+        race_laps = config['simulation_params']['race_laps']
+        # ~95s per lap in our current model
+        MAX_TIME_SECONDS = race_laps * 95 
+except Exception as e:
+    print(f"Error loading config file {CONFIG_FILE}: {e}")
+    sys.exit(1)
+
+
+print(f"--- Starting Delta-V Simulation (Config: {CONFIG_FILE}, Laps: {race_laps}) ---")
 
 # 1. Create the Model
-#    (This automatically creates the SimPy env and starts the processes)
-model = DeltaVModel(num_agents=NUM_AGENTS)
+#    We now pass the config file path to the model
+model = DeltaVModel(config_file_path=CONFIG_FILE)
 
-# 2. Customize agents for an overtake test
-model.f1_agents[0].unique_id = "Ocon"
-model.f1_agents[0].strategy['top_speed'] = 83.0  # m/s (The car in front)
-
-model.f1_agents[1].unique_id = "Bearman"
-model.f1_agents[1].strategy['top_speed'] = 84.0  # m/s (The chasing car)
+# 2. Agent customization is GONE from here, it's all in the JSON!
 
 # 3. Run the SimPy environment
 model.env.run(until=MAX_TIME_SECONDS)
