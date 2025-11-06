@@ -1,0 +1,360 @@
+{
+  "simulation_params": {
+    "race_laps": 3,
+    "time_step": 0.1
+  },
+  "driver_roster": [
+    {
+      "unique_id": "Ocon",
+      "team": "Haas",
+      "strategy": {
+        "top_speed": 82.0,
+        "corner_speed": 40.0,
+        "vsc_speed": 30.0,
+        "c_1_power": 8e-07,
+        "c_2_z_mode_drag": 0.0001,
+        "c_2_x_mode_drag": 3e-05,
+        "mom_aggressiveness": 0.25,
+        "mom_boost": 5.0,
+        "mom_energy_cost": 0.0005,
+        "mom_detection_gap": 80.0
+      }
+    },
+    {
+      "unique_id": "Bearman",
+      "team": "Haas",
+      "strategy": {
+        "top_speed": 82.0,
+        "corner_speed": 40.0,
+        "vsc_speed": 30.0,
+        "c_1_power": 8e-07,
+        "c_2_z_mode_drag": 0.0001,
+        "c_2_x_mode_drag": 3e-05,
+        "mom_aggressiveness": 0.25,
+        "mom_boost": 5.0,
+        "mom_energy_cost": 0.0005,
+        "mom_detection_gap": 80.0
+      }
+    },
+    {
+      "unique_id": "Hamilton",
+      "team": "Ferrari",
+      "strategy": {
+        "top_speed": 82.0,
+        "corner_speed": 40.0,
+        "vsc_speed": 30.0,
+        "c_1_power": 8e-07,
+        "c_2_z_mode_drag": 0.0001,
+        "c_2_x_mode_drag": 3e-05,
+        "mom_aggressiveness": 0.25,
+        "mom_boost": 5.0,
+        "mom_energy_cost": 0.0005,
+        "mom_detection_gap": 80.0
+      }
+    },
+    {
+      "unique_id": "Leclerc",
+      "team": "Ferrari",
+      "strategy": {
+        "top_speed": 82.0,
+        "corner_speed": 40.0,
+        "vsc_speed": 30.0,
+        "c_1_power": 8e-07,
+        "c_2_z_mode_drag": 0.0001,
+        "c_2_x_mode_drag": 3e-05,
+        "mom_aggressiveness": 0.25,
+        "mom_boost": 5.0,
+        "mom_energy_cost": 0.0005,
+        "mom_detection_gap": 80.0
+      }
+    },
+    {
+      "unique_id": "Russell",
+      "team": "Mercedes",
+      "strategy": {
+        "top_speed": 82.0,
+        "corner_speed": 40.0,
+        "vsc_speed": 30.0,
+        "c_1_power": 8e-07,
+        "c_2_z_mode_drag": 0.0001,
+        "c_2_x_mode_drag": 3e-05,
+        "mom_aggressiveness": 0.25,
+        "mom_boost": 5.0,
+        "mom_energy_cost": 0.0005,
+        "mom_detection_gap": 80.0
+      }
+    },
+    {
+      "unique_id": "Antonelli",
+      "team": "Mercedes",
+      "strategy": {
+        "top_speed": 82.0,
+        "corner_speed": 40.0,
+        "vsc_speed": 30.0,
+        "c_1_power": 8e-07,
+        "c_2_z_mode_drag": 0.0001,
+        "c_2_x_mode_drag": 3e-05,
+        "mom_aggressiveness": 0.25,
+        "mom_boost": 5.0,
+        "mom_energy_cost": 0.0005,
+        "mom_detection_gap": 80.0
+      }
+    },
+    {
+      "unique_id": "Norris",
+      "team": "McLaren",
+      "strategy": {
+        "top_speed": 82.0,
+        "corner_speed": 40.0,
+        "vsc_speed": 30.0,
+        "c_1_power": 8e-07,
+        "c_2_z_mode_drag": 0.0001,
+        "c_2_x_mode_drag": 3e-05,
+        "mom_aggressiveness": 0.25,
+        "mom_boost": 5.0,
+        "mom_energy_cost": 0.0005,
+        "mom_detection_gap": 80.0
+      }
+    },
+    {
+      "unique_id": "Piastri",
+      "team": "McLaren",
+      "strategy": {
+        "top_speed": 82.0,
+        "corner_speed": 40.0,
+        "vsc_speed": 30.0,
+        "c_1_power": 8e-07,
+        "c_2_z_mode_drag": 0.0001,
+        "c_2_x_mode_drag": 3e-05,
+        "mom_aggressiveness": 0.25,
+        "mom_boost": 5.0,
+        "mom_energy_cost": 0.0005,
+        "mom_detection_gap": 80.0
+      }
+    },
+    {
+      "unique_id": "Verstappen",
+      "team": "Red Bull",
+      "strategy": {
+        "top_speed": 82.0,
+        "corner_speed": 40.0,
+        "vsc_speed": 30.0,
+        "c_1_power": 8e-07,
+        "c_2_z_mode_drag": 0.0001,
+        "c_2_x_mode_drag": 3e-05,
+        "mom_aggressiveness": 0.25,
+        "mom_boost": 5.0,
+        "mom_energy_cost": 0.0005,
+        "mom_detection_gap": 80.0
+      }
+    },
+    {
+      "unique_id": "Tsunoda",
+      "team": "Red Bull",
+      "strategy": {
+        "top_speed": 82.0,
+        "corner_speed": 40.0,
+        "vsc_speed": 30.0,
+        "c_1_power": 8e-07,
+        "c_2_z_mode_drag": 0.0001,
+        "c_2_x_mode_drag": 3e-05,
+        "mom_aggressiveness": 0.25,
+        "mom_boost": 5.0,
+        "mom_energy_cost": 0.0005,
+        "mom_detection_gap": 80.0
+      }
+    },
+    {
+      "unique_id": "Alonso",
+      "team": "Aston Martin",
+      "strategy": {
+        "top_speed": 82.0,
+        "corner_speed": 40.0,
+        "vsc_speed": 30.0,
+        "c_1_power": 8e-07,
+        "c_2_z_mode_drag": 0.0001,
+        "c_2_x_mode_drag": 3e-05,
+        "mom_aggressiveness": 0.25,
+        "mom_boost": 5.0,
+        "mom_energy_cost": 0.0005,
+        "mom_detection_gap": 80.0
+      }
+    },
+    {
+      "unique_id": "Stroll",
+      "team": "Aston Martin",
+      "strategy": {
+        "top_speed": 82.0,
+        "corner_speed": 40.0,
+        "vsc_speed": 30.0,
+        "c_1_power": 8e-07,
+        "c_2_z_mode_drag": 0.0001,
+        "c_2_x_mode_drag": 3e-05,
+        "mom_aggressiveness": 0.25,
+        "mom_boost": 5.0,
+        "mom_energy_cost": 0.0005,
+        "mom_detection_gap": 80.0
+      }
+    },
+    {
+      "unique_id": "Sainz",
+      "team": "Williams",
+      "strategy": {
+        "top_speed": 82.0,
+        "corner_speed": 40.0,
+        "vsc_speed": 30.0,
+        "c_1_power": 8e-07,
+        "c_2_z_mode_drag": 0.0001,
+        "c_2_x_mode_drag": 3e-05,
+        "mom_aggressiveness": 0.25,
+        "mom_boost": 5.0,
+        "mom_energy_cost": 0.0005,
+        "mom_detection_gap": 80.0
+      }
+    },
+    {
+      "unique_id": "Albon",
+      "team": "Williams",
+      "strategy": {
+        "top_speed": 82.0,
+        "corner_speed": 40.0,
+        "vsc_speed": 30.0,
+        "c_1_power": 8e-07,
+        "c_2_z_mode_drag": 0.0001,
+        "c_2_x_mode_drag": 3e-05,
+        "mom_aggressiveness": 0.25,
+        "mom_boost": 5.0,
+        "mom_energy_cost": 0.0005,
+        "mom_detection_gap": 80.0
+      }
+    },
+    {
+      "unique_id": "Hulkenberg",
+      "team": "Audi",
+      "strategy": {
+        "top_speed": 82.0,
+        "corner_speed": 40.0,
+        "vsc_speed": 30.0,
+        "c_1_power": 8e-07,
+        "c_2_z_mode_drag": 0.0001,
+        "c_2_x_mode_drag": 3e-05,
+        "mom_aggressiveness": 0.25,
+        "mom_boost": 5.0,
+        "mom_energy_cost": 0.0005,
+        "mom_detection_gap": 80.0
+      }
+    },
+    {
+      "unique_id": "Bortoleto",
+      "team": "Audi",
+      "strategy": {
+        "top_speed": 82.0,
+        "corner_speed": 40.0,
+        "vsc_speed": 30.0,
+        "c_1_power": 8e-07,
+        "c_2_z_mode_drag": 0.0001,
+        "c_2_x_mode_drag": 3e-05,
+        "mom_aggressiveness": 0.25,
+        "mom_boost": 5.0,
+        "mom_energy_cost": 0.0005,
+        "mom_detection_gap": 80.0
+      }
+    },
+    {
+      "unique_id": "Gasly",
+      "team": "Alpine",
+      "strategy": {
+        "top_speed": 82.0,
+        "corner_speed": 40.0,
+        "vsc_speed": 30.0,
+        "c_1_power": 8e-07,
+        "c_2_z_mode_drag": 0.0001,
+        "c_2_x_mode_drag": 3e-05,
+        "mom_aggressiveness": 0.25,
+        "mom_boost": 5.0,
+        "mom_energy_cost": 0.0005,
+        "mom_detection_gap": 80.0
+      }
+    },
+    {
+      "unique_id": "Colapinto",
+      "team": "Alpine",
+      "strategy": {
+        "top_speed": 82.0,
+        "corner_speed": 40.0,
+        "vsc_speed": 30.0,
+        "c_1_power": 8e-07,
+        "c_2_z_mode_drag": 0.0001,
+        "c_2_x_mode_drag": 3e-05,
+        "mom_aggressiveness": 0.25,
+        "mom_boost": 5.0,
+        "mom_energy_cost": 0.0005,
+        "mom_detection_gap": 80.0
+      }
+    },
+    {
+      "unique_id": "Lawson",
+      "team": "Racing Bulls",
+      "strategy": {
+        "top_speed": 82.0,
+        "corner_speed": 40.0,
+        "vsc_speed": 30.0,
+        "c_1_power": 8e-07,
+        "c_2_z_mode_drag": 0.0001,
+        "c_2_x_mode_drag": 3e-05,
+        "mom_aggressiveness": 0.25,
+        "mom_boost": 5.0,
+        "mom_energy_cost": 0.0005,
+        "mom_detection_gap": 80.0
+      }
+    },
+    {
+      "unique_id": "Hadjar",
+      "team": "Racing Bulls",
+      "strategy": {
+        "top_speed": 82.0,
+        "corner_speed": 40.0,
+        "vsc_speed": 30.0,
+        "c_1_power": 8e-07,
+        "c_2_z_mode_drag": 0.0001,
+        "c_2_x_mode_drag": 3e-05,
+        "mom_aggressiveness": 0.25,
+        "mom_boost": 5.0,
+        "mom_energy_cost": 0.0005,
+        "mom_detection_gap": 80.0
+      }
+    },
+    {
+      "unique_id": "Perez",
+      "team": "Cadillac",
+      "strategy": {
+        "top_speed": 82.0,
+        "corner_speed": 40.0,
+        "vsc_speed": 30.0,
+        "c_1_power": 8e-07,
+        "c_2_z_mode_drag": 0.0001,
+        "c_2_x_mode_drag": 3e-05,
+        "mom_aggressiveness": 0.25,
+        "mom_boost": 5.0,
+        "mom_energy_cost": 0.0005,
+        "mom_detection_gap": 80.0
+      }
+    },
+    {
+      "unique_id": "Bottas",
+      "team": "Cadillac",
+      "strategy": {
+        "top_speed": 82.0,
+        "corner_speed": 40.0,
+        "vsc_speed": 30.0,
+        "c_1_power": 8e-07,
+        "c_2_z_mode_drag": 0.0001,
+        "c_2_x_mode_drag": 3e-05,
+        "mom_aggressiveness": 0.25,
+        "mom_boost": 5.0,
+        "mom_energy_cost": 0.0005,
+        "mom_detection_gap": 80.0
+      }
+    }
+  ]
+}

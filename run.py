@@ -4,7 +4,7 @@ from model import DeltaVModel
 
 # --- NEW: Run with a config file ---
 # Default to our template, but allow a command-line argument
-CONFIG_FILE = "config_template.json"
+CONFIG_FILE = "config_aggressive.json"
 if len(sys.argv) > 1:
     CONFIG_FILE = sys.argv[1]
 
