@@ -7,3 +7,5 @@ venv/
 
 # Simulation Output
 data.json
+config_aggressive.json
+config_conservative.json
