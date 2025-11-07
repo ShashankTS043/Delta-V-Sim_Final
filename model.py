@@ -13,8 +13,6 @@ class DeltaVModel(Model):
     
     def __init__(self, config_file_path, seed=None):
         # --- Start of Manual Initialization ---
-        # If no seed is given, pick a random one.
-        # This makes each run non-deterministic.
         self.seed = seed if seed is not None else random.randint(0, 1000000)
         self.random = random.Random(self.seed)
         self.running = True
@@ -22,34 +20,61 @@ class DeltaVModel(Model):
         self.step_count = 0 
         # --- End of Manual Initialization ---
         
-        # --- Load Configuration ---
+        # --- Load Master Starting Grid Config ---
         with open(config_file_path, 'r') as f:
             self.config = json.load(f)
             
         sim_params = self.config['simulation_params']
-        driver_roster = self.config['driver_roster']
+        starting_grid = self.config['grid'] # <-- NEW: Read the "grid"
         
         # --- SimPy Environment Setup ---
         self.env = simpy.Environment() 
         self.vsc_active = False 
         
-        self.num_agents = len(driver_roster)
+        self.num_agents = len(starting_grid)
         self.time_step = sim_params['time_step']
+        self.race_laps = sim_params['race_laps']
         
         # --- Build the Environment ---
         self.track = build_bahrain_track()
         self.track_length = sum(data['length'] for u, v, data in self.track.edges(data=True))
         
-        # --- Create Agents from Roster ---
+        # --- Create Agents from Starting Grid ---
         self.f1_agents = []
-        for driver_config in driver_roster:
-            # Pass the agent its specific strategy config
+        
+        # We now cache loaded strategies to avoid reading the same file 20 times
+        strategy_cache = {} 
+        
+        for driver_data in starting_grid:
+            strategy_file = driver_data['strategy_file']
+            
+            # Load the strategy from its file, or use the cache
+            if strategy_file not in strategy_cache:
+                with open(strategy_file, 'r') as f:
+                    strategy_cache[strategy_file] = json.load(f)["strategy"]
+                    
+            strategy_config = strategy_cache[strategy_file]
+
+            # Create the agent
             a = F1Agent(
-                unique_id=driver_config['unique_id'], 
+                unique_id=driver_data['driver'], 
                 model=self, 
-                strategy_config=driver_config['strategy']
+                strategy_config=strategy_config
             )
-            a.team = driver_config.get('team', 'Independent') # Optional: Add team name
+            
+            # --- Set Starting Position & Tyre ---
+            a.team = driver_data['team']
+            a.tyre_compound = driver_data['tyre']
+            
+            # Stagger the grid: pos * 10 meters back from the start line
+            # We'll set this as a negative progress on the final straight
+            start_pos_meters = driver_data['pos'] * 10.0
+            start_node_edge = self.track.get_edge_data("n_t15_apex", "n_t1_brake")
+            start_progress = -(start_pos_meters / start_node_edge['length'])
+            
+            a.position = ("n_t15_apex", start_progress)
+            a.total_distance_traveled = start_progress * start_node_edge['length']
+            
             self.f1_agents.append(a)
             
         # --- Start SimPy Processes ---
