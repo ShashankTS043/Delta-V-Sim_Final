@@ -77,21 +77,20 @@ class F1Agent(Agent):
     def make_decision(self):
         """Agent's "brain" decides velocity and aero mode."""
 
-        # --- 1. ENERGY CHECK (Guard Clause) ---
+        # --- 1. CHECK GUARD CLAUSES ---
         if self.status == "OUT_OF_ENERGY":
             self.velocity = 0
             self.aero_mode = "Z-MODE"
             self.mom_active = False
             return
             
-        # --- 2. VSC CHECK (Guard Clause) ---
         if self.model.vsc_active:
             self.velocity = self.strategy['vsc_speed']
             self.aero_mode = "Z-MODE" 
             self.mom_active = False 
             return
         
-        # --- 3. Get current track segment data ---
+        # --- 2. Get current track segment data ---
         current_node = self.position[0]
         successors = list(self.model.track.successors(current_node))
         if not successors:
@@ -101,23 +100,44 @@ class F1Agent(Agent):
             
         next_node = successors[0]
         edge_data = self.model.track.get_edge_data(current_node, next_node)
-        track_type = edge_data['type']
-        x_mode_allowed = edge_data['x_mode_allowed']
-
-        # --- 4. ACTIVE AERO (X-MODE) LOGIC ---
-        if x_mode_allowed:
+        
+        # --- 3. DYNAMIC PHYSICS & AERO LOGIC ---
+        
+        track_radius = edge_data.get('radius') # Get the corner radius
+        
+        if track_radius is None:
+            # This is a STRAIGHT
             self.aero_mode = "X-MODE" 
             base_velocity = self.strategy['top_speed']
-        else: # We are in a corner
-            self.aero_mode = "Z-MODE" 
-            base_velocity = self.strategy['corner_speed']
-
-        # --- 5. MANUAL OVERRIDE (MOM) LOGIC ---
+        
+        else:
+            # This is a CORNER
+            self.aero_mode = "Z-MODE"
+            
+            # --- NEW DYNAMIC CORNERING ---
+            # Physics: v = sqrt(Grip / Radius)
+            # Our formula: v = sqrt(grip_factor / radius)
+            # This ensures (low radius = low speed), (high radius = high speed)
+            grip = self.strategy['grip_factor']
+            
+            # Prevent division by zero if radius is 0
+            if track_radius <= 0:
+                base_velocity = 0
+            else:
+                base_velocity = (grip * track_radius) ** 0.5 # ** 0.5 is sqrt()
+            
+            # Cap the corner speed by the car's absolute top speed
+            if base_velocity > self.strategy['top_speed']:
+                base_velocity = self.strategy['top_speed']
+                
+        # --- 4. MANUAL OVERRIDE (MOM) LOGIC ---
         self.mom_active = False 
         
         use_mom_chance = self.model.random.random() 
+        x_mode_allowed = edge_data.get('x_mode_allowed', False)
         
-        if self.mom_available and track_type == "STRAIGHT" and (use_mom_chance < self.strategy['mom_aggressiveness']):
+        # MOM is only allowed on designated X-Mode straights
+        if self.mom_available and x_mode_allowed and (use_mom_chance < self.strategy['mom_aggressiveness']):
             self.velocity = base_velocity + self.strategy['mom_boost']
             self.mom_active = True
         else:
