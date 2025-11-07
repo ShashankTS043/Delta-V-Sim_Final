@@ -12,13 +12,13 @@ class F1Agent(Agent):
         self.model = model
         
         # --- Core Physics State ---
-        self.position = (0, 0.0) # (current_node, progress_on_edge_as_fraction)
-        self.velocity = 0.0     # in m/s
+        self.position = ("n_t15_apex", 0.0) 
+        self.velocity = 0.0     
         self.status = "RACING"
         
         # --- Race State ---
         self.laps_completed = 0
-        self.total_distance_traveled = 0.0 # Used for ranking
+        self.total_distance_traveled = 0.0 
         
         # --- 2026 Power Unit (Engine) State ---
         self.battery_soc = 1.0
@@ -27,23 +27,27 @@ class F1Agent(Agent):
         self.aero_mode = "Z-MODE"
         
         # --- 2026 Manual Override Mode (MOM) State ---
-        self.mom_available = False # Can it be used this lap?
-        self.mom_active = False    # Is it being used *this step*?
+        self.mom_available = False 
+        self.mom_active = False    
+        
+        # --- NEW: Tyre State ---
+        self.tyre_compound = "medium" # Default, will be set by config
+        self.tyre_life_remaining = 1.0  # 1.0 = 100%
+        self.tyre_grip_modifier = 1.0   # 1.0 = 100% grip
+        self.on_cliff = False           # Has tyre grip "fallen off a cliff"?
         
         # --- Agent Strategy (The "Brain") ---
-        # The strategy is now passed in from the config file
         self.strategy = strategy_config
 
     def step(self):
         """The agent's main logic loop, called by the model each tick."""
-        self.perceive()       # 1. See the environment and check for MOM
-        self.make_decision()  # 2. Decide on velocity, aero, and MOM use
-        self.update_physics() # 3. Move the agent and consume energy
+        self.perceive()       
+        self.make_decision()  
+        self.update_physics() 
 
     def perceive(self):
         """Agent gathers information from the environment (MOM detection)."""
         
-        # --- 1. Find the car directly in front ---
         agent_in_front = None
         min_gap = float('inf')
 
@@ -53,7 +57,6 @@ class F1Agent(Agent):
             
             gap = other.total_distance_traveled - self.total_distance_traveled
             
-            # Handle lap crossover (e.g., other is 1 lap ahead)
             if gap < -self.model.track_length / 2:
                 gap += self.model.track_length
             
@@ -61,7 +64,6 @@ class F1Agent(Agent):
                 min_gap = gap
                 agent_in_front = other
 
-        # --- 2. Check for MOM activation ---
         current_node = self.position[0]
         successors = list(self.model.track.successors(current_node))
         if not successors: return
@@ -78,7 +80,7 @@ class F1Agent(Agent):
         """Agent's "brain" decides velocity and aero mode."""
 
         # --- 1. CHECK GUARD CLAUSES ---
-        if self.status == "OUT_OF_ENERGY":
+        if self.status == "OUT_OF_ENERGY" or self.status == "CRASHED": # NEW
             self.velocity = 0
             self.aero_mode = "Z-MODE"
             self.mom_active = False
@@ -102,8 +104,7 @@ class F1Agent(Agent):
         edge_data = self.model.track.get_edge_data(current_node, next_node)
         
         # --- 3. DYNAMIC PHYSICS & AERO LOGIC ---
-        
-        track_radius = edge_data.get('radius') # Get the corner radius
+        track_radius = edge_data.get('radius') 
         
         if track_radius is None:
             # This is a STRAIGHT
@@ -114,29 +115,23 @@ class F1Agent(Agent):
             # This is a CORNER
             self.aero_mode = "Z-MODE"
             
-            # --- NEW DYNAMIC CORNERING ---
-            # Physics: v = sqrt(Grip / Radius)
-            # Our formula: v = sqrt(grip_factor / radius)
-            # This ensures (low radius = low speed), (high radius = high speed)
-            grip = self.strategy['grip_factor']
+            # --- DYNAMIC CORNERING ---
+            # NEW: Grip is now affected by tyre wear
+            grip = self.strategy['grip_factor'] * self.tyre_grip_modifier
             
-            # Prevent division by zero if radius is 0
             if track_radius <= 0:
                 base_velocity = 0
             else:
-                base_velocity = (grip * track_radius) ** 0.5 # ** 0.5 is sqrt()
+                base_velocity = (grip * track_radius) ** 0.5 
             
-            # Cap the corner speed by the car's absolute top speed
             if base_velocity > self.strategy['top_speed']:
                 base_velocity = self.strategy['top_speed']
                 
         # --- 4. MANUAL OVERRIDE (MOM) LOGIC ---
         self.mom_active = False 
-        
         use_mom_chance = self.model.random.random() 
         x_mode_allowed = edge_data.get('x_mode_allowed', False)
         
-        # MOM is only allowed on designated X-Mode straights
         if self.mom_available and x_mode_allowed and (use_mom_chance < self.strategy['mom_aggressiveness']):
             self.velocity = base_velocity + self.strategy['mom_boost']
             self.mom_active = True
@@ -146,11 +141,10 @@ class F1Agent(Agent):
     def update_physics(self):
         """Agent's state (position, velocity, soc) is updated."""
         
-        # --- ZOMBIE CAR CHECK ---
         if self.velocity == 0:
             return
 
-        # --- 1. Get current position details ---
+        # --- 1. Get position details & calculate movement ---
         current_node = self.position[0]
         progress_on_edge = self.position[1] 
 
@@ -164,75 +158,59 @@ class F1Agent(Agent):
         edge_data = self.model.track.get_edge_data(current_node, next_node)
         edge_length = edge_data['length'] 
 
-        # --- 2. Calculate distance and update totals ---
         distance_to_move = self.velocity * self.model.time_step
         self.total_distance_traveled += distance_to_move
         
-        if edge_length == 0:
-            progress_to_add = 1.0
-        else:
-            progress_to_add = distance_to_move / edge_length
+        progress_to_add = (distance_to_move / edge_length) if edge_length > 0 else 1.0
         
-        # --- 3. Update position ---
+        # --- 2. Update position & Check for Laps ---
         progress_on_edge += progress_to_add
         
         if progress_on_edge >= 1.0:
             leftover_progress_fraction = progress_on_edge - 1.0
-            self.position = (next_node, leftover_progress_fraction)
             
-            # --- 4. LAP COMPLETION LOGIC ---
-            if next_node == 0:
+            is_finish = edge_data.get('is_finish_line', False)
+            if is_finish:
                 self.laps_completed += 1
                 self.mom_available = False 
                 print(f"--- AGENT {self.unique_id} COMPLETED LAP {self.laps_completed}! ---")
+
+            self.position = (next_node, leftover_progress_fraction)
         else:
             self.position = (current_node, progress_on_edge)
 
-        # --- 5. ADVANCED 2026 ENERGY COST MODEL ---
-        # --- 5. ADVANCED 2026 ENERGY/REGEN MODEL ---
-        
-        # Get constants from our strategy
+        # --- 3. ADVANCED 2026 ENERGY/REGEN MODEL ---
         C1_POWER = self.strategy['c_1_power']
         REGEN_EFFICIENCY = self.strategy['c_regen_efficiency']
 
-        # --- A. ENERGY DRAIN (On a straight, in X-Mode) ---
         if self.aero_mode == "X-MODE":
+            # --- A. ENERGY DRAIN (On a straight) ---
             C2_AERO_DRAG = self.strategy['c_2_x_mode_drag']
-            
-            # E = C1*v^2 + C2*Drag
             power_cost = C1_POWER * (self.velocity * self.velocity)
             drag_cost = C2_AERO_DRAG
             energy_cost_per_step = (power_cost + drag_cost) * self.model.time_step
 
-            # Add MOM cost if active
             if self.mom_active:
                 energy_cost_per_step += self.strategy['mom_energy_cost']
 
-            # Apply the cost
             if self.battery_soc > energy_cost_per_step:
                 self.battery_soc -= energy_cost_per_step
             else:
                 self.battery_soc = 0
                 self.velocity = 0
                 self.status = "OUT_OF_ENERGY"
-        
-        # --- B. ENERGY REGENERATION (In a corner, in Z-Mode) ---
-        else: # We are in "Z-MODE" (braking for a corner)
-            # Regen is proportional to braking (approximated by corner speed)
+        else: 
+            # --- B. ENERGY REGENERATION (In a corner) ---
             energy_gained = (self.velocity / 50.0) * REGEN_EFFICIENCY * self.model.time_step
             
-            if self.battery_soc < 1.0: # Can't charge over 100%
+            if self.battery_soc < 1.0: 
                 self.battery_soc += energy_gained
-                if self.battery_soc > 1.0:
-                    self.battery_soc = 1.0
+                if self.battery_soc > 1.0: self.battery_soc = 1.0
             
             # --- C. Z-MODE (CORNER) ENERGY DRAIN ---
-            # It still costs energy to move through a corner, just less
-            # We'll use the Z-Mode drag constant
             C2_AERO_DRAG = self.strategy['c_2_z_mode_drag']
             power_cost = C1_POWER * (self.velocity * self.velocity)
             drag_cost = C2_AERO_DRAG
-            
             energy_cost_per_step = (power_cost + drag_cost) * self.model.time_step
             
             if self.battery_soc > energy_cost_per_step:
@@ -241,3 +219,38 @@ class F1Agent(Agent):
                 self.battery_soc = 0
                 self.velocity = 0
                 self.status = "OUT_OF_ENERGY"
+
+        # --- 4. NEW: TYRE WEAR MODEL ---
+        
+        # Find the correct wear rate for our compound
+        if self.tyre_compound == "soft":
+            wear_rate = self.strategy['tyre_wear_rate_soft']
+        elif self.tyre_compound == "hard":
+            wear_rate = self.strategy['tyre_wear_rate_hard']
+        else: # Default to medium
+            wear_rate = self.strategy['tyre_wear_rate_medium']
+            
+        # Base wear
+        tyre_wear = wear_rate * self.model.time_step
+        
+        # Extra wear for cornering (Z-Mode) and MOM
+        if self.aero_mode == "Z-MODE":
+            tyre_wear *= 1.5 # 50% extra wear in corners
+        if self.mom_active:
+            tyre_wear *= 2.0 # 100% extra wear when using MOM boost
+            
+        # Apply the wear
+        if self.tyre_life_remaining > 0:
+            self.tyre_life_remaining -= tyre_wear
+        
+        # Check for "grip cliff"
+        if not self.on_cliff and (self.tyre_life_remaining <= self.strategy['tyre_grip_cliff_percent']):
+            self.on_cliff = True
+            self.tyre_grip_modifier = self.strategy['tyre_cliff_grip_modifier']
+            print(f"--- AGENT {self.unique_id} TYRES FELL OFF A CLIFF! GRIP REDUCED. ---")
+
+        # If tyres are completely gone, you're done
+        if self.tyre_life_remaining <= 0:
+            self.tyre_life_remaining = 0
+            self.status = "CRASHED" # Simplified, could be "PUNCTURE"
+            self.velocity = 0
