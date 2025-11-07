@@ -7,6 +7,13 @@
     "c_1_power": 0.000001,
     "c_2_z_mode_drag": 0.0001,
     "c_2_x_mode_drag": 0.000003,
+    
+    "tyre_wear_rate_soft": 0.005,
+    "tyre_wear_rate_medium": 0.003,
+    "tyre_wear_rate_hard": 0.001,
+    "tyre_grip_cliff_percent": 0.3,
+    "tyre_cliff_grip_modifier": 0.8,
+    
     "mom_aggressiveness": 0.75,
     "mom_boost": 5.0,
     "mom_energy_cost": 0.0005,
