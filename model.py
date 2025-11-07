@@ -11,9 +11,11 @@ class DeltaVModel(Model):
     This class holds the SimPy environment, the track, and the list of agents.
     """
     
-    def __init__(self, config_file_path):
+    def __init__(self, config_file_path, seed=None):
         # --- Start of Manual Initialization ---
-        self.seed = 12345
+        # If no seed is given, pick a random one.
+        # This makes each run non-deterministic.
+        self.seed = seed if seed is not None else random.randint(0, 1000000)
         self.random = random.Random(self.seed)
         self.running = True
         self.space = None 

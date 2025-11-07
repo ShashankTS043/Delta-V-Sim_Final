@@ -1,44 +1,67 @@
 import sys
-import os  # <-- ADD THIS LINE
+import os
+import json
 from model import DeltaVModel
 
-# Run a full race (Bahrain is ~90s per lap, so 57 laps is ~5130s)
-# We'll do a 3-lap race for a quick test
-RACE_LAPS = 3
-RACE_TIME_SECONDS = 95 * RACE_LAPS # 95s per lap
-
-def run_single_race():
+def run_single_race(config_file_path):
     """
-    Runs one full, silent simulation and returns the winner.
+    Runs one full, silent simulation from a config file.
+    Returns a JSON string of the final race results.
     """
-    model = DeltaVModel(num_agents=2)
     
-    # Setup the strategies
-    model.f1_agents[0].unique_id = "Ocon"
-    model.f1_agents[0].strategy['top_speed'] = 83.0  # Car A
-
-    model.f1_agents[1].unique_id = "Bearman"
-    model.f1_agents[1].strategy['top_speed'] = 84.0  # Car B
+    # --- Load Config ---
+    with open(config_file_path, 'r') as f:
+        config = json.load(f)
     
-    # Run the SimPy environment
+    race_laps = config['simulation_params']['race_laps']
+    RACE_TIME_SECONDS = race_laps * 95 # ~95s per lap
+    
+    # --- Create Model ---
+    model = DeltaVModel(config_file_path=config_file_path, seed=None)
+    
+    # --- Run Simulation ---
     model.env.run(until=RACE_TIME_SECONDS)
     
-    # --- Determine the winner ---
-    # We sort by total distance traveled
-    sorted_agents = sorted(model.f1_agents, 
-                           key=lambda x: x.total_distance_traveled, 
+    # --- Collate Results ---
+    final_results = []
+    for agent in model.f1_agents:
+        agent_data = {
+            "driver": agent.unique_id,
+            "team": agent.team,
+            "laps_completed": agent.laps_completed,
+            "total_distance": agent.total_distance_traveled,
+            "final_soc_pct": round(agent.battery_soc * 100, 2),
+            "status": agent.status
+        }
+        final_results.append(agent_data)
+        
+    # Sort by distance to find the winner
+    sorted_results = sorted(final_results, 
+                           key=lambda x: x["total_distance"], 
                            reverse=True)
     
-    winner = sorted_agents[0].unique_id
-    return winner
+    # Return the full results as a JSON string
+    return json.dumps(sorted_results)
 
 # This part lets the file be run by itself
 if __name__ == "__main__":
-    # This will make our multiprocessing script work
-    # We silence all print statements by redirecting them
-    sys.stdout = open(os.devnull, 'w')
-    winner_name = run_single_race()
-    sys.stdout = sys.__stdout__ # Restore print
     
-    # Print ONLY the winner's name
-    print(winner_name)
+    if len(sys.argv) < 2:
+        # We'll write errors to stderr so they don't corrupt the output
+        sys.stderr.write("Error: No config file specified.\n")
+        sys.exit(1)
+        
+    config_file = sys.argv[1]
+    
+    # Silence all print statements
+    original_stdout = sys.stdout
+    sys.stdout = open(os.devnull, 'w')
+    
+    # Run the race
+    results_json = run_single_race(config_file_path=config_file)
+    
+    # Restore print
+    sys.stdout = original_stdout
+    
+    # Print ONLY the final JSON results
+    print(results_json)
