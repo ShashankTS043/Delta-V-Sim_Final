@@ -8,11 +8,13 @@ def run_single_race(config_file_path, seed): # <-- NEW: accept seed
     Runs one full, silent simulation from a config file.
     Returns a JSON string of the final race results.
     """
+    
     with open(config_file_path, 'r') as f:
         config = json.load(f)
     
     race_laps = config['simulation_params']['race_laps']
-    RACE_TIME_SECONDS = race_laps * 95
+    # --- THIS IS THE FIX ---
+    RACE_TIME_SECONDS = race_laps * 92 # ~100s per lap
     
     # Pass the seed to the model
     model = DeltaVModel(config_file_path=config_file_path, seed=seed)
@@ -30,10 +32,10 @@ def run_single_race(config_file_path, seed): # <-- NEW: accept seed
             "status": agent.status
         }
         final_results.append(agent_data)
-        
+    
     sorted_results = sorted(final_results, 
-                           key=lambda x: x["total_distance"], 
-                           reverse=True)
+                            key=lambda x: x["total_distance"], 
+                            reverse=True)
     
     return json.dumps(sorted_results)
 
@@ -41,7 +43,7 @@ if __name__ == "__main__":
     if len(sys.argv) < 2:
         sys.stderr.write("Error: No config file specified.\n")
         sys.exit(1)
-        
+    
     config_file = sys.argv[1]
     
     # NEW: Get a random seed from the Monte Carlo script

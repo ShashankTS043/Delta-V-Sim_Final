@@ -11,8 +11,15 @@ if len(sys.argv) > 1:
 try:
     with open(CONFIG_FILE, 'r') as f:
         config = json.load(f)
-        race_laps = config['simulation_params']['race_laps']
-        MAX_TIME_SECONDS = race_laps * 95 # ~95s per lap
+    race_laps = config['simulation_params']['race_laps']
+    
+    # --- THIS IS THE FIX ---
+    # Make sure it's 100 seconds per lap to run the full race
+    MAX_TIME_SECONDS = race_laps * 92 
+    
+    # --- DEBUG LINE ---
+    print(f"--- DEBUG: RUNNING SIMULATION FOR {MAX_TIME_SECONDS} SECONDS ({race_laps} laps) ---")
+
 except Exception as e:
     print(f"Error loading config file {CONFIG_FILE}: {e}")
     sys.exit(1)

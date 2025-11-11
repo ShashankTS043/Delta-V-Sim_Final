@@ -1,6 +1,6 @@
 {
   "simulation_params": {
-    "race_laps": 15,
+    "race_laps": 57,
     "time_step": 0.1
   },
   "grid": [
