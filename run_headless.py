@@ -14,7 +14,7 @@ def run_single_race(config_file_path, seed):
         config = json.load(f)
     
     race_laps = config['simulation_params']['race_laps']
-    RACE_TIME_SECONDS = race_laps * 100 # ~100s per lap (safe buffer)
+    RACE_TIME_SECONDS = race_laps * 92 # ~100s per lap (safe buffer)
     
     # Pass the seed to the model
     model = DeltaVModel(config_file_path=config_file_path, seed=seed)

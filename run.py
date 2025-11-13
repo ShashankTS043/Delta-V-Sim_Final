@@ -14,7 +14,7 @@ try:
     race_laps = config['simulation_params']['race_laps']
     
     # Run for 100 seconds per lap (a safe buffer)
-    MAX_TIME_SECONDS = race_laps * 100 
+    MAX_TIME_SECONDS = race_laps * 92 
     
     print(f"--- DEBUG: RUNNING SIMULATION FOR {MAX_TIME_SECONDS} SECONDS ({race_laps} laps) ---")
 

@@ -1,7 +1,7 @@
 import random
 import json
 import simpy
-import copy
+import copy 
 from mesa import Model
 from agent import F1Agent
 from track_graph import build_bahrain_track
@@ -9,7 +9,7 @@ from track_graph import build_bahrain_track
 class DeltaVModel(Model):
     """
     The main model running the Delta-V simulation.
-    (Elite+ Day 6: Full Stochastic Realism)
+    (Pro+ Day 3: Advanced MOM Physics & Strategy Noise)
     """
 
     def __init__(self, config_file_path, seed=None):
@@ -23,7 +23,7 @@ class DeltaVModel(Model):
         self.env = simpy.Environment()
         self.vsc_active = False
         self.step_count = 0
-        self.race_over = False # For Chequered Flag
+        self.race_over = False
         # --- End of Manual Initialization ---
 
         # --- Load Master Starting Grid Config ---
@@ -35,7 +35,7 @@ class DeltaVModel(Model):
         
         self.num_agents = len(starting_grid)
         self.time_step = sim_params['time_step']
-        self.race_laps = sim_params['race_laps'] # From config (57)
+        self.race_laps = sim_params['race_laps']
         
         # --- Build the Environment ---
         self.track = build_bahrain_track()
@@ -56,18 +56,17 @@ class DeltaVModel(Model):
 
             # --- Day 6 Strategy "Noise" ---
             if "haas" not in strategy_file:
-                # Add +/- 1% noise to top speed
+                # Add +/- 1% noise to the new top speed key
                 speed_noise = self.random.uniform(0.99, 1.01)
-                strategy_config["top_speed"] *= speed_noise
+                strategy_config["standard_top_speed_kph"] *= speed_noise
                 
-                # Add +/- 5% noise to grip factor
                 grip_noise = self.random.uniform(0.95, 1.05)
                 strategy_config["grip_factor"] *= grip_noise
                 
-                # Add +/- 5% noise to aggressiveness
                 mom_noise = self.random.uniform(0.95, 1.05)
                 strategy_config["mom_aggressiveness"] *= mom_noise
 
+            # Create the agent
             a = F1Agent(
                 unique_id=driver_data['driver'], 
                 model=self, 
@@ -107,10 +106,9 @@ class DeltaVModel(Model):
                 
                 self.step_count += 1
                 
-                # --- Chequered Flag Logic ---
                 if self.race_over:
                     print("--- CHEQUERED FLAG: Race has ended. ---")
-                    break # Stop the simulation loop
+                    break
                         
                 yield self.env.timeout(self.time_step)
         except simpy.Interrupt:
@@ -120,22 +118,18 @@ class DeltaVModel(Model):
         """
         This is the 'Race Master' process that injects global events.
         """
-        while not self.race_over: # Stop events when race is over
-            # Wait for 300-600 seconds (5-10 mins)
+        while not self.race_over: 
             wait_time = self.random.uniform(300, 600)
             yield self.env.timeout(wait_time)
             
             if self.race_over: break
 
-            # Deploy the VSC
             print(f"--- VSC DEPLOYED at t={self.env.now:.1f}s ---")
             self.vsc_active = True
             
-            # Hold VSC for 15-30 seconds
             vsc_duration = self.random.uniform(15, 30)
             yield self.env.timeout(vsc_duration)
             
-            # End the VSC
             print(f"--- VSC ENDING at t={self.env.now:.1f}s ---")
             self.vsc_active = False
 
@@ -147,7 +141,7 @@ class DeltaVModel(Model):
         
         race_status = {
             "timestamp": f"0:00:{self.time_step * self.step_count:.1f}",
-            "current_lap": 1, # Placeholder, real lap is per-agent
+            "current_lap": 1, 
             "total_laps": self.race_laps,
             "safety_car": "VSC" if self.vsc_active else "NONE"
         }
@@ -168,8 +162,8 @@ class DeltaVModel(Model):
                 "status": agent.status,
                 "lap_data": {
                     "current_lap": agent.laps_completed + 1,
-                    "last_lap_time": f"{agent.lap_times[-1]:.2f}s" if agent.lap_times else "0.00s", 
-                    "fastest_lap_time": f"{min(agent.lap_times):.2f}s" if agent.lap_times else "0.00s"
+                    "last_lap_time": "0:00.000", 
+                    "fastest_lap_time": "0:00.000"
                 },
                 "vehicle_state": {
                     "battery_soc": round(agent.battery_soc, 2),

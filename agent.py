@@ -4,152 +4,128 @@ import statistics
 class F1Agent(Agent):
     """
     An agent representing a single 2026 F1 car.
-    (Elite+ Day 6: Includes Pit AI, Stats Logging, and Driver Error)
+    (Pro+ Day 3: Advanced MOM Physics)
     """
 
     def __init__(self, unique_id, model, strategy_config):
-        # --- Manually set the 2 required properties ---
         self.unique_id = unique_id
         self.model = model
         
-        # --- Core Physics State ---
+        # --- Physics ---
         self.position = ("n_t15_apex", 0.0) 
         self.velocity = 0.0 
-        self.status = "RACING" # RACING, PITTING, OUT_OF_ENERGY, CRASHED, FINISHED
+        self.status = "RACING"
         
         # --- Race State ---
         self.laps_completed = 0
         self.total_distance_traveled = 0.0
+        self.total_race_time_s = 0.0
+        self.lap_times = []
         
-        # --- 2026 50/50 Power Unit State ---
+        # --- Power Unit ---
         self.battery_capacity_mj = strategy_config['battery_capacity_mj']
         self.battery_soc = 1.0 
         self.fuel_energy_remaining = strategy_config['fuel_tank_mj']
         self.energy_recovered_this_lap_mj = 0.0 
         
-        # --- 2026 Active Aero State ---
+        # --- Aero & MOM ---
         self.aero_mode = "Z-MODE"
-        
-        # --- 2026 Manual Override Mode (MOM) State ---
         self.mom_available = False
         self.mom_active = False 
         
-        # --- Tyre State ---
+        # --- Tyres ---
         self.tyre_compound = "medium" 
         self.tyre_life_remaining = 1.0 
         self.tyre_grip_modifier = 1.0 
         self.on_cliff = False 
         
-        # --- Pit Stop State ---
+        # --- Pit Stops ---
         self.wants_to_pit = False
         self.time_in_pit_stall = 0.0
         
-        # --- Stats Logging ---
+        # --- Stats ---
         self.pit_stops_made = 0
         self.time_on_softs_s = 0.0
         self.time_on_mediums_s = 0.0
         self.time_on_hards_s = 0.0
         self.mom_uses_count = 0
         
-        # --- Race Time Logging ---
-        self.total_race_time_s = 0.0
-        self.lap_times = []
-        
-        # --- Agent Strategy (The "Brain") ---
         self.strategy = strategy_config
 
     def step(self):
-        """The agent's main logic loop, called by the model each tick."""
         self.perceive() 
         self.make_decision()
         self.update_physics() 
 
     def perceive(self):
-        """Agent gathers information and makes high-level strategy decisions (like pitting)."""
-        
-        # Stop perceiving if race is over
+        """Agent gathers information and makes high-level strategy decisions."""
         if self.status == "FINISHED": return
 
-        # --- 1. Find the car directly in front (for MOM) ---
+        # 1. Find car ahead
         agent_in_front = None
         min_gap = float('inf')
-
         for other in self.model.f1_agents:
             if other.unique_id == self.unique_id: continue
-            
             gap = other.total_distance_traveled - self.total_distance_traveled
-            
             if gap < -self.model.track_length / 2: gap += self.model.track_length
-            
             if 0 < gap < min_gap:
                 min_gap = gap
                 agent_in_front = other
 
-        # --- 2. Check for MOM activation & Pit Decision---
-        current_node = self.position[0]
-        
-        # Find the *next* node on the default track path
-        next_node = self.get_next_node_from_successors(force_track=True)
-        
-        if not next_node: return
-        
-        # Get the data for the edge we are CURRENTLY on
-        edge_data = self.model.track.get_edge_data(current_node, next_node)
-        
-        if not edge_data: return
-
-        # --- Check for MOM ---
-        is_detection_point = edge_data.get('mom_detection', False)
-        if is_detection_point and agent_in_front and (min_gap < self.strategy["mom_detection_gap"]):
-            if not self.mom_available: 
-                print(f"--- AGENT {self.unique_id} GOT MOM! (Gap: {min_gap:.1f}m) ---")
-            self.mom_available = True
-        
-        # --- Check for Pit Decision ---
-        is_pit_decision_point = edge_data.get('is_pit_entry_decision', False)
-        
-        if is_pit_decision_point:
-            # Check strategy: Are we allowed to pit? (e.g. Lap 1 + 1 >= Lap 2)
-            can_pit = (self.laps_completed + 1 >= self.strategy['pit_window_open_lap'])
-            
-            # Check tyre state: Do we NEED to pit?
-            should_pit = (self.tyre_life_remaining < self.strategy['pit_tyre_cliff_threshold'])
-            
-            if can_pit and should_pit and self.status == "RACING":
-                self.wants_to_pit = True
-                print(f"--- AGENT {self.unique_id} DECIDES TO PIT! (Tyre: {self.tyre_life_remaining*100:.0f}%) ---")
-            else:
-                self.wants_to_pit = False
-
-    def get_next_node_from_successors(self, force_track=False):
-        """Helper function to find the next node, handling pit/track splits."""
+        # 2. Check MOM Detection
         current_node = self.position[0]
         successors = list(self.model.track.successors(current_node))
+        if not successors: return
         
-        if not successors:
-            return None
+        main_track_edge = None
+        for succ in successors:
+             if not self.model.track.get_edge_data(current_node, succ).get('is_pit_lane', False):
+                main_track_edge = self.model.track.get_edge_data(current_node, succ)
+                break
+        
+        if main_track_edge:
+            is_detection_point = main_track_edge.get('mom_detection', False)
+            if is_detection_point and agent_in_front and (min_gap < self.strategy["mom_detection_gap"]):
+                if not self.mom_available: 
+                    print(f"--- AGENT {self.unique_id} GOT MOM! (Gap: {min_gap:.1f}m) ---")
+                    # --- NEW: Add 0.5 MJ of extra energy ---
+                    self.battery_soc += (self.strategy.get('mom_extra_energy_mj', 0.5) / self.battery_capacity_mj)
+                    if self.battery_soc > 1.0: self.battery_soc = 1.0
+                self.mom_available = True
+        
+        # 3. Check Pit Decision
+        next_node_for_decision = self.get_next_node_from_successors(force_track=True)
+        if not next_node_for_decision: return
+        
+        edge_data = self.model.track.get_edge_data(current_node, next_node_for_decision)
+        if edge_data:
+            is_pit_decision_point = edge_data.get('is_pit_entry_decision', False)
+            if is_pit_decision_point:
+                can_pit = (self.laps_completed + 1 >= self.strategy['pit_window_open_lap'])
+                should_pit = (self.tyre_life_remaining < self.strategy['pit_tyre_cliff_threshold'])
+                if can_pit and should_pit and self.status == "RACING":
+                    self.wants_to_pit = True
+                    print(f"--- AGENT {self.unique_id} DECIDES TO PIT! (Tyre: {self.tyre_life_remaining*100:.0f}%) ---")
+                else:
+                    self.wants_to_pit = False
 
-        # If we are forced to stay on track (or not pitting), find the non-pit edge
+    def get_next_node_from_successors(self, force_track=False):
+        current_node = self.position[0]
+        successors = list(self.model.track.successors(current_node))
+        if not successors: return None
         if force_track or (not self.wants_to_pit and current_node == "n_t15_apex"):
              for succ in successors:
                 if not self.model.track.get_edge_data(current_node, succ).get('is_pit_lane', False):
                     return succ
-        
-        # If we want to pit and are at the decision node
         elif self.wants_to_pit and current_node == "n_t15_apex":
             for succ in successors:
                 if self.model.track.get_edge_data(current_node, succ).get('is_pit_lane', False):
-                    return succ # Return "n_pit_entry"
+                    return succ 
         
-        # Otherwise (already in pit lane or on a normal part of the track), just return the only path
-        # This will also handle the case where force_track=True and we're not on the decision node
-        if force_track and successors:
-            for succ in successors:
-                if not self.model.track.get_edge_data(current_node, succ).get('is_pit_lane', False):
-                    return succ
-            
-        return successors[0] if successors else None
-
+        # Default case if no other logic matches
+        if successors:
+            return successors[0]
+        return None
 
     def make_decision(self):
         """Agent's "brain" decides velocity, aero, and path (track vs. pits)."""
@@ -167,9 +143,8 @@ class F1Agent(Agent):
             self.mom_active = False
             return
                 
-        # --- Day 6 Stochastic Realism (Driver Error) ---
         error_chance = self.model.random.random()
-        if error_chance < self.strategy.get("driver_error_rate", 0.00001):
+        if error_chance < self.strategy.get("driver_error_rate", 0.000001):
             if self.status == "RACING": 
                 print(f"--- AGENT {self.unique_id} HAS CRASHED! (Driver Error) ---")
                 self.status = "CRASHED"
@@ -202,35 +177,50 @@ class F1Agent(Agent):
         # --- 4. DYNAMIC PHYSICS & AERO LOGIC ---
         track_radius = edge_data.get('radius') 
         
+        # --- THIS IS THE FIX ---
+        # Convert kph from strategy to m/s for physics
+        standard_top_speed_ms = self.strategy['standard_top_speed_kph'] / 3.6
+        taper_speed_ms = self.strategy.get('electric_motor_taper_kph', 290.0) / 3.6
+        
         if edge_data.get('is_pit_lane', False):
             base_velocity = self.strategy['vsc_speed']
             self.aero_mode = "Z-MODE"
         
         elif track_radius is None:
+            # STRAIGHT
             self.aero_mode = "X-MODE"
-            base_velocity = self.strategy['top_speed']
+            # Base speed on straight is standard top speed
+            base_velocity = standard_top_speed_ms
             
         else:
+            # CORNER
             self.aero_mode = "Z-MODE"
             grip = self.strategy['grip_factor'] * self.tyre_grip_modifier
             
             if track_radius <= 0: base_velocity = 0
             else: base_velocity = (grip * track_radius) ** 0.5
             
-            if base_velocity > self.strategy['top_speed']:
-                base_velocity = self.strategy['top_speed']
+            if base_velocity > standard_top_speed_ms:
+                base_velocity = standard_top_speed_ms
         
-        # --- 5. MANUAL OVERRIDE (MOM) LOGIC ---
+        # --- 5. ADVANCED 2026 MOM LOGIC ---
         self.mom_active = False
         use_mom_chance = self.model.random.random() 
         x_mode_allowed = edge_data.get('x_mode_allowed', False)
         
+        # Check if we should *try* to use MOM
         if self.mom_available and x_mode_allowed and (not edge_data.get('is_pit_lane', False)) and (use_mom_chance < self.strategy['mom_aggressiveness']):
-            self.velocity = base_velocity + self.strategy['mom_boost']
+            # We have MOM, use the boosted top speed
+            self.velocity = self.strategy['mom_boost_speed_kph'] / 3.6 # 337 kph
             self.mom_active = True
             self.mom_uses_count += 1 
         else:
+            # We are not using MOM.
             self.velocity = base_velocity
+            # Apply the 2026 power taper for standard cars
+            if self.velocity > taper_speed_ms:
+                # Simulate power tapering off by capping at the taper speed
+                self.velocity = taper_speed_ms
 
 
     def update_physics(self):
@@ -280,14 +270,12 @@ class F1Agent(Agent):
         
         if progress_on_edge >= 1.0:
             leftover_progress_fraction = progress_on_edge - 1.0
-            
             is_finish = edge_data.get('is_finish_line', False)
-            
             if is_finish:
                 current_lap_time = self.total_race_time_s - sum(self.lap_times)
                 self.lap_times.append(current_lap_time) 
                 self.laps_completed += 1
-                self.mom_available = False
+                self.mom_available = False # Reset MOM at the end of the lap
                 self.energy_recovered_this_lap_mj = 0.0
                 print(f"--- AGENT {self.unique_id} COMPLETED LAP {self.laps_completed}! (Time: {current_lap_time:.2f}s) ---")
                 
@@ -295,7 +283,6 @@ class F1Agent(Agent):
                     print(f"--- AGENT {self.unique_id} WINS THE RACE! (First to {self.laps_completed} laps) ---")
                     self.model.race_over = True 
                     self.status = "FINISHED"
-                    
             self.position = (next_node, leftover_progress_fraction)
         else:
             self.position = (current_node, progress_on_edge)
@@ -312,6 +299,7 @@ class F1Agent(Agent):
         drag_cost = C2_AERO_DRAG
         total_energy_cost_per_step = (power_cost + drag_cost) * self.model.time_step
         
+        # --- THIS IS THE FIX ---
         if self.mom_active:
             total_energy_cost_per_step += self.strategy['mom_energy_cost']
         
@@ -337,6 +325,7 @@ class F1Agent(Agent):
             self.status = "OUT_OF_ENERGY"
             self.velocity = 0
 
+        # --- C. REGENERATION (In a corner) ---
         if self.aero_mode == "Z-MODE":
             regen_factor = self.strategy.get('c_regen_factor', 1e-07)
             energy_gained = regen_factor * (self.velocity * self.velocity) * self.model.time_step

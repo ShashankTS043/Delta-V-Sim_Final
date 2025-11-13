@@ -8,12 +8,15 @@
       "unique_id": "Ocon",
       "team": "Haas",
       "strategy": {
+        "fuel_tank_mj": 4500,
+        "ice_power_limit_mj_per_step": 0.0833,
+        "battery_power_limit_mj_per_step": 0.035,
         "top_speed": 82.0,
         "grip_factor": 21.0,
         "vsc_speed": 30.0,
-        "c_regen_efficiency": 0.0005,
+        "c_regen_efficiency": 0.05,
         "c_1_power": 8e-07,
-        "c_2_z_mode_drag": 0.0001,
+        "c_2_z_mode_drag": 1e-05,
         "c_2_x_mode_drag": 3e-06,
         "tyre_wear_rate_soft": 0.0015,
         "tyre_wear_rate_medium": 0.0008,
@@ -24,21 +27,22 @@
         "mom_boost": 5.0,
         "mom_energy_cost": 0.0005,
         "mom_detection_gap": 80.0,
-        "pit_time_loss_seconds": 22.0,
-        "pit_window_open_lap": 7,
-        "pit_tyre_cliff_threshold": 0.35
+        "pit_window_open_lap": 7
       }
     },
     {
       "unique_id": "Bearman",
       "team": "Haas",
       "strategy": {
+        "fuel_tank_mj": 4500,
+        "ice_power_limit_mj_per_step": 0.0833,
+        "battery_power_limit_mj_per_step": 0.035,
         "top_speed": 82.0,
         "grip_factor": 21.0,
         "vsc_speed": 30.0,
-        "c_regen_efficiency": 0.0005,
+        "c_regen_efficiency": 0.05,
         "c_1_power": 8e-07,
-        "c_2_z_mode_drag": 0.0001,
+        "c_2_z_mode_drag": 1e-05,
         "c_2_x_mode_drag": 3e-06,
         "tyre_wear_rate_soft": 0.0015,
         "tyre_wear_rate_medium": 0.0008,
@@ -49,21 +53,22 @@
         "mom_boost": 5.0,
         "mom_energy_cost": 0.0005,
         "mom_detection_gap": 80.0,
-        "pit_time_loss_seconds": 22.0,
-        "pit_window_open_lap": 7,
-        "pit_tyre_cliff_threshold": 0.35
+        "pit_window_open_lap": 7
       }
     },
     {
       "unique_id": "Hamilton",
       "team": "Ferrari",
       "strategy": {
+        "fuel_tank_mj": 4500,
+        "ice_power_limit_mj_per_step": 0.0833,
+        "battery_power_limit_mj_per_step": 0.035,
         "top_speed": 82.0,
         "grip_factor": 21.0,
         "vsc_speed": 30.0,
-        "c_regen_efficiency": 0.0005,
+        "c_regen_efficiency": 0.05,
         "c_1_power": 8e-07,
-        "c_2_z_mode_drag": 0.0001,
+        "c_2_z_mode_drag": 1e-05,
         "c_2_x_mode_drag": 3e-06,
         "tyre_wear_rate_soft": 0.0015,
         "tyre_wear_rate_medium": 0.0008,
@@ -74,21 +79,22 @@
         "mom_boost": 5.0,
         "mom_energy_cost": 0.0005,
         "mom_detection_gap": 80.0,
-        "pit_time_loss_seconds": 22.0,
-        "pit_window_open_lap": 7,
-        "pit_tyre_cliff_threshold": 0.35
+        "pit_window_open_lap": 7
       }
     },
     {
       "unique_id": "Leclerc",
       "team": "Ferrari",
       "strategy": {
+        "fuel_tank_mj": 4500,
+        "ice_power_limit_mj_per_step": 0.0833,
+        "battery_power_limit_mj_per_step": 0.035,
         "top_speed": 82.0,
         "grip_factor": 21.0,
         "vsc_speed": 30.0,
-        "c_regen_efficiency": 0.0005,
+        "c_regen_efficiency": 0.05,
         "c_1_power": 8e-07,
-        "c_2_z_mode_drag": 0.0001,
+        "c_2_z_mode_drag": 1e-05,
         "c_2_x_mode_drag": 3e-06,
         "tyre_wear_rate_soft": 0.0015,
         "tyre_wear_rate_medium": 0.0008,
@@ -99,21 +105,22 @@
         "mom_boost": 5.0,
         "mom_energy_cost": 0.0005,
         "mom_detection_gap": 80.0,
-        "pit_time_loss_seconds": 22.0,
-        "pit_window_open_lap": 7,
-        "pit_tyre_cliff_threshold": 0.35
+        "pit_window_open_lap": 7
       }
     },
     {
       "unique_id": "Russell",
       "team": "Mercedes",
       "strategy": {
+        "fuel_tank_mj": 4500,
+        "ice_power_limit_mj_per_step": 0.0833,
+        "battery_power_limit_mj_per_step": 0.035,
         "top_speed": 82.0,
         "grip_factor": 21.0,
         "vsc_speed": 30.0,
-        "c_regen_efficiency": 0.0005,
+        "c_regen_efficiency": 0.05,
         "c_1_power": 8e-07,
-        "c_2_z_mode_drag": 0.0001,
+        "c_2_z_mode_drag": 1e-05,
         "c_2_x_mode_drag": 3e-06,
         "tyre_wear_rate_soft": 0.0015,
         "tyre_wear_rate_medium": 0.0008,
@@ -124,21 +131,22 @@
         "mom_boost": 5.0,
         "mom_energy_cost": 0.0005,
         "mom_detection_gap": 80.0,
-        "pit_time_loss_seconds": 22.0,
-        "pit_window_open_lap": 7,
-        "pit_tyre_cliff_threshold": 0.35
+        "pit_window_open_lap": 7
       }
     },
     {
       "unique_id": "Antonelli",
       "team": "Mercedes",
       "strategy": {
+        "fuel_tank_mj": 4500,
+        "ice_power_limit_mj_per_step": 0.0833,
+        "battery_power_limit_mj_per_step": 0.035,
         "top_speed": 82.0,
         "grip_factor": 21.0,
         "vsc_speed": 30.0,
-        "c_regen_efficiency": 0.0005,
+        "c_regen_efficiency": 0.05,
         "c_1_power": 8e-07,
-        "c_2_z_mode_drag": 0.0001,
+        "c_2_z_mode_drag": 1e-05,
         "c_2_x_mode_drag": 3e-06,
         "tyre_wear_rate_soft": 0.0015,
         "tyre_wear_rate_medium": 0.0008,
@@ -149,21 +157,22 @@
         "mom_boost": 5.0,
         "mom_energy_cost": 0.0005,
         "mom_detection_gap": 80.0,
-        "pit_time_loss_seconds": 22.0,
-        "pit_window_open_lap": 7,
-        "pit_tyre_cliff_threshold": 0.35
+        "pit_window_open_lap": 7
       }
     },
     {
       "unique_id": "Norris",
       "team": "McLaren",
       "strategy": {
+        "fuel_tank_mj": 4500,
+        "ice_power_limit_mj_per_step": 0.0833,
+        "battery_power_limit_mj_per_step": 0.035,
         "top_speed": 82.0,
         "grip_factor": 21.0,
         "vsc_speed": 30.0,
-        "c_regen_efficiency": 0.0005,
+        "c_regen_efficiency": 0.05,
         "c_1_power": 8e-07,
-        "c_2_z_mode_drag": 0.0001,
+        "c_2_z_mode_drag": 1e-05,
         "c_2_x_mode_drag": 3e-06,
         "tyre_wear_rate_soft": 0.0015,
         "tyre_wear_rate_medium": 0.0008,
@@ -174,21 +183,22 @@
         "mom_boost": 5.0,
         "mom_energy_cost": 0.0005,
         "mom_detection_gap": 80.0,
-        "pit_time_loss_seconds": 22.0,
-        "pit_window_open_lap": 7,
-        "pit_tyre_cliff_threshold": 0.35
+        "pit_window_open_lap": 7
       }
     },
     {
       "unique_id": "Piastri",
       "team": "McLaren",
       "strategy": {
+        "fuel_tank_mj": 4500,
+        "ice_power_limit_mj_per_step": 0.0833,
+        "battery_power_limit_mj_per_step": 0.035,
         "top_speed": 82.0,
         "grip_factor": 21.0,
         "vsc_speed": 30.0,
-        "c_regen_efficiency": 0.0005,
+        "c_regen_efficiency": 0.05,
         "c_1_power": 8e-07,
-        "c_2_z_mode_drag": 0.0001,
+        "c_2_z_mode_drag": 1e-05,
         "c_2_x_mode_drag": 3e-06,
         "tyre_wear_rate_soft": 0.0015,
         "tyre_wear_rate_medium": 0.0008,
@@ -199,21 +209,22 @@
         "mom_boost": 5.0,
         "mom_energy_cost": 0.0005,
         "mom_detection_gap": 80.0,
-        "pit_time_loss_seconds": 22.0,
-        "pit_window_open_lap": 7,
-        "pit_tyre_cliff_threshold": 0.35
+        "pit_window_open_lap": 7
       }
     },
     {
       "unique_id": "Verstappen",
       "team": "Red Bull",
       "strategy": {
+        "fuel_tank_mj": 4500,
+        "ice_power_limit_mj_per_step": 0.0833,
+        "battery_power_limit_mj_per_step": 0.035,
         "top_speed": 82.0,
         "grip_factor": 21.0,
         "vsc_speed": 30.0,
-        "c_regen_efficiency": 0.0005,
+        "c_regen_efficiency": 0.05,
         "c_1_power": 8e-07,
-        "c_2_z_mode_drag": 0.0001,
+        "c_2_z_mode_drag": 1e-05,
         "c_2_x_mode_drag": 3e-06,
         "tyre_wear_rate_soft": 0.0015,
         "tyre_wear_rate_medium": 0.0008,
@@ -224,21 +235,22 @@
         "mom_boost": 5.0,
         "mom_energy_cost": 0.0005,
         "mom_detection_gap": 80.0,
-        "pit_time_loss_seconds": 22.0,
-        "pit_window_open_lap": 7,
-        "pit_tyre_cliff_threshold": 0.35
+        "pit_window_open_lap": 7
       }
     },
     {
       "unique_id": "Tsunoda",
       "team": "Red Bull",
       "strategy": {
+        "fuel_tank_mj": 4500,
+        "ice_power_limit_mj_per_step": 0.0833,
+        "battery_power_limit_mj_per_step": 0.035,
         "top_speed": 82.0,
         "grip_factor": 21.0,
         "vsc_speed": 30.0,
-        "c_regen_efficiency": 0.0005,
+        "c_regen_efficiency": 0.05,
         "c_1_power": 8e-07,
-        "c_2_z_mode_drag": 0.0001,
+        "c_2_z_mode_drag": 1e-05,
         "c_2_x_mode_drag": 3e-06,
         "tyre_wear_rate_soft": 0.0015,
         "tyre_wear_rate_medium": 0.0008,
@@ -249,21 +261,22 @@
         "mom_boost": 5.0,
         "mom_energy_cost": 0.0005,
         "mom_detection_gap": 80.0,
-        "pit_time_loss_seconds": 22.0,
-        "pit_window_open_lap": 7,
-        "pit_tyre_cliff_threshold": 0.35
+        "pit_window_open_lap": 7
       }
     },
     {
       "unique_id": "Alonso",
       "team": "Aston Martin",
       "strategy": {
+        "fuel_tank_mj": 4500,
+        "ice_power_limit_mj_per_step": 0.0833,
+        "battery_power_limit_mj_per_step": 0.035,
         "top_speed": 82.0,
         "grip_factor": 21.0,
         "vsc_speed": 30.0,
-        "c_regen_efficiency": 0.0005,
+        "c_regen_efficiency": 0.05,
         "c_1_power": 8e-07,
-        "c_2_z_mode_drag": 0.0001,
+        "c_2_z_mode_drag": 1e-05,
         "c_2_x_mode_drag": 3e-06,
         "tyre_wear_rate_soft": 0.0015,
         "tyre_wear_rate_medium": 0.0008,
@@ -274,21 +287,22 @@
         "mom_boost": 5.0,
         "mom_energy_cost": 0.0005,
         "mom_detection_gap": 80.0,
-        "pit_time_loss_seconds": 22.0,
-        "pit_window_open_lap": 7,
-        "pit_tyre_cliff_threshold": 0.35
+        "pit_window_open_lap": 7
       }
     },
     {
       "unique_id": "Stroll",
       "team": "Aston Martin",
       "strategy": {
+        "fuel_tank_mj": 4500,
+        "ice_power_limit_mj_per_step": 0.0833,
+        "battery_power_limit_mj_per_step": 0.035,
         "top_speed": 82.0,
         "grip_factor": 21.0,
         "vsc_speed": 30.0,
-        "c_regen_efficiency": 0.0005,
+        "c_regen_efficiency": 0.05,
         "c_1_power": 8e-07,
-        "c_2_z_mode_drag": 0.0001,
+        "c_2_z_mode_drag": 1e-05,
         "c_2_x_mode_drag": 3e-06,
         "tyre_wear_rate_soft": 0.0015,
         "tyre_wear_rate_medium": 0.0008,
@@ -299,21 +313,22 @@
         "mom_boost": 5.0,
         "mom_energy_cost": 0.0005,
         "mom_detection_gap": 80.0,
-        "pit_time_loss_seconds": 22.0,
-        "pit_window_open_lap": 7,
-        "pit_tyre_cliff_threshold": 0.35
+        "pit_window_open_lap": 7
       }
     },
     {
       "unique_id": "Sainz",
       "team": "Williams",
       "strategy": {
+        "fuel_tank_mj": 4500,
+        "ice_power_limit_mj_per_step": 0.0833,
+        "battery_power_limit_mj_per_step": 0.035,
         "top_speed": 82.0,
         "grip_factor": 21.0,
         "vsc_speed": 30.0,
-        "c_regen_efficiency": 0.0005,
+        "c_regen_efficiency": 0.05,
         "c_1_power": 8e-07,
-        "c_2_z_mode_drag": 0.0001,
+        "c_2_z_mode_drag": 1e-05,
         "c_2_x_mode_drag": 3e-06,
         "tyre_wear_rate_soft": 0.0015,
         "tyre_wear_rate_medium": 0.0008,
@@ -324,21 +339,22 @@
         "mom_boost": 5.0,
         "mom_energy_cost": 0.0005,
         "mom_detection_gap": 80.0,
-        "pit_time_loss_seconds": 22.0,
-        "pit_window_open_lap": 7,
-        "pit_tyre_cliff_threshold": 0.35
+        "pit_window_open_lap": 7
       }
     },
     {
       "unique_id": "Albon",
       "team": "Williams",
       "strategy": {
+        "fuel_tank_mj": 4500,
+        "ice_power_limit_mj_per_step": 0.0833,
+        "battery_power_limit_mj_per_step": 0.035,
         "top_speed": 82.0,
         "grip_factor": 21.0,
         "vsc_speed": 30.0,
-        "c_regen_efficiency": 0.0005,
+        "c_regen_efficiency": 0.05,
         "c_1_power": 8e-07,
-        "c_2_z_mode_drag": 0.0001,
+        "c_2_z_mode_drag": 1e-05,
         "c_2_x_mode_drag": 3e-06,
         "tyre_wear_rate_soft": 0.0015,
         "tyre_wear_rate_medium": 0.0008,
@@ -349,21 +365,22 @@
         "mom_boost": 5.0,
         "mom_energy_cost": 0.0005,
         "mom_detection_gap": 80.0,
-        "pit_time_loss_seconds": 22.0,
-        "pit_window_open_lap": 7,
-        "pit_tyre_cliff_threshold": 0.35
+        "pit_window_open_lap": 7
       }
     },
     {
       "unique_id": "Hulkenberg",
       "team": "Audi",
       "strategy": {
+        "fuel_tank_mj": 4500,
+        "ice_power_limit_mj_per_step": 0.0833,
+        "battery_power_limit_mj_per_step": 0.035,
         "top_speed": 82.0,
         "grip_factor": 21.0,
         "vsc_speed": 30.0,
-        "c_regen_efficiency": 0.0005,
+        "c_regen_efficiency": 0.05,
         "c_1_power": 8e-07,
-        "c_2_z_mode_drag": 0.0001,
+        "c_2_z_mode_drag": 1e-05,
         "c_2_x_mode_drag": 3e-06,
         "tyre_wear_rate_soft": 0.0015,
         "tyre_wear_rate_medium": 0.0008,
@@ -374,21 +391,22 @@
         "mom_boost": 5.0,
         "mom_energy_cost": 0.0005,
         "mom_detection_gap": 80.0,
-        "pit_time_loss_seconds": 22.0,
-        "pit_window_open_lap": 7,
-        "pit_tyre_cliff_threshold": 0.35
+        "pit_window_open_lap": 7
       }
     },
     {
       "unique_id": "Bortoleto",
       "team": "Audi",
       "strategy": {
+        "fuel_tank_mj": 4500,
+        "ice_power_limit_mj_per_step": 0.0833,
+        "battery_power_limit_mj_per_step": 0.035,
         "top_speed": 82.0,
         "grip_factor": 21.0,
         "vsc_speed": 30.0,
-        "c_regen_efficiency": 0.0005,
+        "c_regen_efficiency": 0.05,
         "c_1_power": 8e-07,
-        "c_2_z_mode_drag": 0.0001,
+        "c_2_z_mode_drag": 1e-05,
         "c_2_x_mode_drag": 3e-06,
         "tyre_wear_rate_soft": 0.0015,
         "tyre_wear_rate_medium": 0.0008,
@@ -399,21 +417,22 @@
         "mom_boost": 5.0,
         "mom_energy_cost": 0.0005,
         "mom_detection_gap": 80.0,
-        "pit_time_loss_seconds": 22.0,
-        "pit_window_open_lap": 7,
-        "pit_tyre_cliff_threshold": 0.35
+        "pit_window_open_lap": 7
       }
     },
     {
       "unique_id": "Gasly",
       "team": "Alpine",
       "strategy": {
+        "fuel_tank_mj": 4500,
+        "ice_power_limit_mj_per_step": 0.0833,
+        "battery_power_limit_mj_per_step": 0.035,
         "top_speed": 82.0,
         "grip_factor": 21.0,
         "vsc_speed": 30.0,
-        "c_regen_efficiency": 0.0005,
+        "c_regen_efficiency": 0.05,
         "c_1_power": 8e-07,
-        "c_2_z_mode_drag": 0.0001,
+        "c_2_z_mode_drag": 1e-05,
         "c_2_x_mode_drag": 3e-06,
         "tyre_wear_rate_soft": 0.0015,
         "tyre_wear_rate_medium": 0.0008,
@@ -424,21 +443,22 @@
         "mom_boost": 5.0,
         "mom_energy_cost": 0.0005,
         "mom_detection_gap": 80.0,
-        "pit_time_loss_seconds": 22.0,
-        "pit_window_open_lap": 7,
-        "pit_tyre_cliff_threshold": 0.35
+        "pit_window_open_lap": 7
       }
     },
     {
       "unique_id": "Colapinto",
       "team": "Alpine",
       "strategy": {
+        "fuel_tank_mj": 4500,
+        "ice_power_limit_mj_per_step": 0.0833,
+        "battery_power_limit_mj_per_step": 0.035,
         "top_speed": 82.0,
         "grip_factor": 21.0,
         "vsc_speed": 30.0,
-        "c_regen_efficiency": 0.0005,
+        "c_regen_efficiency": 0.05,
         "c_1_power": 8e-07,
-        "c_2_z_mode_drag": 0.0001,
+        "c_2_z_mode_drag": 1e-05,
         "c_2_x_mode_drag": 3e-06,
         "tyre_wear_rate_soft": 0.0015,
         "tyre_wear_rate_medium": 0.0008,
@@ -449,21 +469,22 @@
         "mom_boost": 5.0,
         "mom_energy_cost": 0.0005,
         "mom_detection_gap": 80.0,
-        "pit_time_loss_seconds": 22.0,
-        "pit_window_open_lap": 7,
-        "pit_tyre_cliff_threshold": 0.35
+        "pit_window_open_lap": 7
       }
     },
     {
       "unique_id": "Lawson",
       "team": "Racing Bulls",
       "strategy": {
+        "fuel_tank_mj": 4500,
+        "ice_power_limit_mj_per_step": 0.0833,
+        "battery_power_limit_mj_per_step": 0.035,
         "top_speed": 82.0,
         "grip_factor": 21.0,
         "vsc_speed": 30.0,
-        "c_regen_efficiency": 0.0005,
+        "c_regen_efficiency": 0.05,
         "c_1_power": 8e-07,
-        "c_2_z_mode_drag": 0.0001,
+        "c_2_z_mode_drag": 1e-05,
         "c_2_x_mode_drag": 3e-06,
         "tyre_wear_rate_soft": 0.0015,
         "tyre_wear_rate_medium": 0.0008,
@@ -474,21 +495,22 @@
         "mom_boost": 5.0,
         "mom_energy_cost": 0.0005,
         "mom_detection_gap": 80.0,
-        "pit_time_loss_seconds": 22.0,
-        "pit_window_open_lap": 7,
-        "pit_tyre_cliff_threshold": 0.35
+        "pit_window_open_lap": 7
       }
     },
     {
       "unique_id": "Hadjar",
       "team": "Racing Bulls",
       "strategy": {
+        "fuel_tank_mj": 4500,
+        "ice_power_limit_mj_per_step": 0.0833,
+        "battery_power_limit_mj_per_step": 0.035,
         "top_speed": 82.0,
         "grip_factor": 21.0,
         "vsc_speed": 30.0,
-        "c_regen_efficiency": 0.0005,
+        "c_regen_efficiency": 0.05,
         "c_1_power": 8e-07,
-        "c_2_z_mode_drag": 0.0001,
+        "c_2_z_mode_drag": 1e-05,
         "c_2_x_mode_drag": 3e-06,
         "tyre_wear_rate_soft": 0.0015,
         "tyre_wear_rate_medium": 0.0008,
@@ -499,21 +521,22 @@
         "mom_boost": 5.0,
         "mom_energy_cost": 0.0005,
         "mom_detection_gap": 80.0,
-        "pit_time_loss_seconds": 22.0,
-        "pit_window_open_lap": 7,
-        "pit_tyre_cliff_threshold": 0.35
+        "pit_window_open_lap": 7
       }
     },
     {
       "unique_id": "Perez",
       "team": "Cadillac",
       "strategy": {
+        "fuel_tank_mj": 4500,
+        "ice_power_limit_mj_per_step": 0.0833,
+        "battery_power_limit_mj_per_step": 0.035,
         "top_speed": 82.0,
         "grip_factor": 21.0,
         "vsc_speed": 30.0,
-        "c_regen_efficiency": 0.0005,
+        "c_regen_efficiency": 0.05,
         "c_1_power": 8e-07,
-        "c_2_z_mode_drag": 0.0001,
+        "c_2_z_mode_drag": 1e-05,
         "c_2_x_mode_drag": 3e-06,
         "tyre_wear_rate_soft": 0.0015,
         "tyre_wear_rate_medium": 0.0008,
@@ -524,21 +547,22 @@
         "mom_boost": 5.0,
         "mom_energy_cost": 0.0005,
         "mom_detection_gap": 80.0,
-        "pit_time_loss_seconds": 22.0,
-        "pit_window_open_lap": 7,
-        "pit_tyre_cliff_threshold": 0.35
+        "pit_window_open_lap": 7
       }
     },
     {
       "unique_id": "Bottas",
       "team": "Cadillac",
       "strategy": {
+        "fuel_tank_mj": 4500,
+        "ice_power_limit_mj_per_step": 0.0833,
+        "battery_power_limit_mj_per_step": 0.035,
         "top_speed": 82.0,
         "grip_factor": 21.0,
         "vsc_speed": 30.0,
-        "c_regen_efficiency": 0.0005,
+        "c_regen_efficiency": 0.05,
         "c_1_power": 8e-07,
-        "c_2_z_mode_drag": 0.0001,
+        "c_2_z_mode_drag": 1e-05,
         "c_2_x_mode_drag": 3e-06,
         "tyre_wear_rate_soft": 0.0015,
         "tyre_wear_rate_medium": 0.0008,
@@ -549,9 +573,7 @@
         "mom_boost": 5.0,
         "mom_energy_cost": 0.0005,
         "mom_detection_gap": 80.0,
-        "pit_time_loss_seconds": 22.0,
-        "pit_window_open_lap": 7,
-        "pit_tyre_cliff_threshold": 0.35
+        "pit_window_open_lap": 7
       }
     }
   ]
