@@ -3,8 +3,7 @@ import networkx as nx
 def build_bahrain_track():
     """
     Creates a high-fidelity, physics-based graph of the Bahrain F1 circuit.
-    This new model includes all 15 turns.
-    (This is the stable version *before* pit lanes)
+    This new model includes all 15 turns AND a pit lane.
     """
     G = nx.DiGraph() 
     # --- Node Definitions (Visually Accurate Coords) ---
@@ -27,6 +26,11 @@ def build_bahrain_track():
     G.add_node("n_t13_brake", pos=(500, 750)) # T13 Braking
     G.add_node("n_t13_apex", pos=(550, 780)) # T13 Apex
     G.add_node("n_t14_brake", pos=(750, 780)) # T14 Braking
+    
+    # --- Pit Lane Nodes ---
+    G.add_node("n_pit_entry", pos=(790, 650)) # Pit lane entry point
+    G.add_node("n_pit_stall", pos=(790, 400)) # The pit box
+    G.add_node("n_pit_exit", pos=(790, 120)) # Pit lane exit (rejoins after T1)
 
     # --- Edge Definitions (Track Segments) ---
     
@@ -36,9 +40,8 @@ def build_bahrain_track():
         radius=None, 
         x_mode_allowed=True,
         mom_detection=True,
-        is_finish_line=True, # This edge IS the finish line
-        is_pit_entry_decision=True) # This is the corner to decide
- 
+        is_finish_line=True) 
+
     # 2. T1/T2/T3 Complex
     G.add_edge("n_t1_brake", "n_t1_apex", length=110, radius=60, x_mode_allowed=False)
     G.add_edge("n_t1_apex", "n_t2_apex", length=100, radius=70, x_mode_allowed=False)
@@ -81,6 +84,40 @@ def build_bahrain_track():
     
     # 14. T14 / T15
     G.add_edge("n_t13_apex", "n_t14_brake", length=300, radius=None, x_mode_allowed=False)
-    G.add_edge("n_t14_brake", "n_t15_apex", length=150, radius=70, x_mode_allowed=False)
+    G.add_edge("n_t14_brake", "n_t15_apex", 
+        length=150, 
+        radius=70, 
+        x_mode_allowed=False,
+        is_pit_entry_decision=True) # This is the corner to decide
+    
+    # --- Pit Lane Edges ---
+    
+    # This is the path an agent takes IF they decide to pit at "n_t15_apex"
+    G.add_edge("n_t15_apex", "n_pit_entry", 
+        length=50, 
+        radius=100, 
+        is_pit_lane=True, 
+        x_mode_allowed=False)
+    
+    # The long, slow pit lane
+    G.add_edge("n_pit_entry", "n_pit_stall", 
+        length=400, 
+        radius=None, 
+        is_pit_lane=True, 
+        x_mode_allowed=False)
+    
+    # The stationary pit stop
+    G.add_edge("n_pit_stall", "n_pit_exit", 
+        length=1, # 1m, essentially a "stop"
+        radius=None, 
+        is_pit_lane=True, 
+        x_mode_allowed=False)
+    
+    # The pit exit, rejoining after T1
+    G.add_edge("n_pit_exit", "n_t1_apex", 
+        length=450, 
+        radius=None, 
+        is_pit_lane=True, 
+        x_mode_allowed=False)
     
     return G
