@@ -6,32 +6,31 @@
     "battery_power_limit_mj_per_step": 0.035,
     "max_regen_per_lap_mj": 8.5,
     "c_regen_factor": 1e-07,
-
     "standard_top_speed_kph": 330.0,
     "electric_motor_taper_kph": 290.0,
     "mom_boost_speed_kph": 337.0,
     "mom_extra_energy_mj": 0.5,
-
     "grip_factor": 22.0,
     "vsc_speed": 30.0,
-    
     "c_1_power": "9.0e-05",
     "c_2_z_mode_drag": "9.0e-03",
     "c_2_x_mode_drag": "3e-03",
-
     "tyre_wear_rate_soft": 0.00065,
     "tyre_wear_rate_medium": 0.00045,
     "tyre_wear_rate_hard": 0.0003,
     "tyre_grip_cliff_percent": 0.3,
     "tyre_cliff_grip_modifier": 0.8,
-    
-    "mom_aggressiveness": 0.9,
-    
     "driver_error_rate": 0.000001,
-    "mom_energy_cost": 0.001,
     "mom_detection_gap": 80.0,
     "pit_time_loss_seconds": 22.0,
-    "pit_window_open_lap": 12,
-    "pit_tyre_cliff_threshold": 0.35
+    "pit_window_open_lap": 18,
+    "pit_tyre_cliff_threshold": 0.35,
+
+    "energy_deployment_map": {
+      "n_t15_apex": "DEPLOY",
+      "n_t4_apex": "STANDARD",
+      "n_t10_apex": "DEPLOY",
+      "n_t12_apex": "STANDARD"
+    }
   }
 }

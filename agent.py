@@ -4,12 +4,13 @@ import statistics
 class F1Agent(Agent):
     """
     An agent representing a single 2026 F1 car.
-    (Pro+ Day 3: Advanced MOM Physics)
+    (Pro++: "Universal Brain" - Can run random or map-based logic)
     """
 
     def __init__(self, unique_id, model, strategy_config):
         self.unique_id = unique_id
         self.model = model
+        self.strategy = strategy_config
         
         # --- Physics ---
         self.position = ("n_t15_apex", 0.0) 
@@ -23,9 +24,9 @@ class F1Agent(Agent):
         self.lap_times = []
         
         # --- Power Unit ---
-        self.battery_capacity_mj = strategy_config['battery_capacity_mj']
+        self.battery_capacity_mj = self.strategy['battery_capacity_mj']
         self.battery_soc = 1.0 
-        self.fuel_energy_remaining = strategy_config['fuel_tank_mj']
+        self.fuel_energy_remaining = self.strategy['fuel_tank_mj']
         self.energy_recovered_this_lap_mj = 0.0 
         
         # --- Aero & MOM ---
@@ -49,8 +50,6 @@ class F1Agent(Agent):
         self.time_on_mediums_s = 0.0
         self.time_on_hards_s = 0.0
         self.mom_uses_count = 0
-        
-        self.strategy = strategy_config
 
     def step(self):
         self.perceive() 
@@ -88,7 +87,7 @@ class F1Agent(Agent):
             if is_detection_point and agent_in_front and (min_gap < self.strategy["mom_detection_gap"]):
                 if not self.mom_available: 
                     print(f"--- AGENT {self.unique_id} GOT MOM! (Gap: {min_gap:.1f}m) ---")
-                    # --- NEW: Add 0.5 MJ of extra energy ---
+                    # Grant the 0.5 MJ of extra energy
                     self.battery_soc += (self.strategy.get('mom_extra_energy_mj', 0.5) / self.battery_capacity_mj)
                     if self.battery_soc > 1.0: self.battery_soc = 1.0
                 self.mom_available = True
@@ -122,7 +121,6 @@ class F1Agent(Agent):
                 if self.model.track.get_edge_data(current_node, succ).get('is_pit_lane', False):
                     return succ 
         
-        # Default case if no other logic matches
         if successors:
             return successors[0]
         return None
@@ -177,8 +175,6 @@ class F1Agent(Agent):
         # --- 4. DYNAMIC PHYSICS & AERO LOGIC ---
         track_radius = edge_data.get('radius') 
         
-        # --- THIS IS THE FIX ---
-        # Convert kph from strategy to m/s for physics
         standard_top_speed_ms = self.strategy['standard_top_speed_kph'] / 3.6
         taper_speed_ms = self.strategy.get('electric_motor_taper_kph', 290.0) / 3.6
         
@@ -187,13 +183,10 @@ class F1Agent(Agent):
             self.aero_mode = "Z-MODE"
         
         elif track_radius is None:
-            # STRAIGHT
             self.aero_mode = "X-MODE"
-            # Base speed on straight is standard top speed
             base_velocity = standard_top_speed_ms
             
         else:
-            # CORNER
             self.aero_mode = "Z-MODE"
             grip = self.strategy['grip_factor'] * self.tyre_grip_modifier
             
@@ -203,23 +196,33 @@ class F1Agent(Agent):
             if base_velocity > standard_top_speed_ms:
                 base_velocity = standard_top_speed_ms
         
-        # --- 5. ADVANCED 2026 MOM LOGIC ---
+        # --- 5. "UNIVERSAL BRAIN" MOM LOGIC ---
         self.mom_active = False
-        use_mom_chance = self.model.random.random() 
         x_mode_allowed = edge_data.get('x_mode_allowed', False)
+        should_activate_mom = False # Flag to decide
+
+        # --- "Pro++" LOGIC (Energy Map) ---
+        if "energy_deployment_map" in self.strategy:
+            energy_map = self.strategy.get("energy_deployment_map", {})
+            command = energy_map.get(current_node, "STANDARD")
+
+            if command == "DEPLOY" and self.mom_available and x_mode_allowed and (not edge_data.get('is_pit_lane', False)):
+                should_activate_mom = True
         
-        # Check if we should *try* to use MOM
-        if self.mom_available and x_mode_allowed and (not edge_data.get('is_pit_lane', False)) and (use_mom_chance < self.strategy['mom_aggressiveness']):
-            # We have MOM, use the boosted top speed
+        # --- "Pro+" LOGIC (Random Aggressiveness) ---
+        elif "mom_aggressiveness" in self.strategy:
+            use_mom_chance = self.model.random.random() 
+            if self.mom_available and x_mode_allowed and (not edge_data.get('is_pit_lane', False)) and (use_mom_chance < self.strategy['mom_aggressiveness']):
+                should_activate_mom = True
+
+        # --- EXECUTE DECISION ---
+        if should_activate_mom:
             self.velocity = self.strategy['mom_boost_speed_kph'] / 3.6 # 337 kph
             self.mom_active = True
             self.mom_uses_count += 1 
         else:
-            # We are not using MOM.
             self.velocity = base_velocity
-            # Apply the 2026 power taper for standard cars
             if self.velocity > taper_speed_ms:
-                # Simulate power tapering off by capping at the taper speed
                 self.velocity = taper_speed_ms
 
 
@@ -299,9 +302,9 @@ class F1Agent(Agent):
         drag_cost = C2_AERO_DRAG
         total_energy_cost_per_step = (power_cost + drag_cost) * self.model.time_step
         
-        # --- THIS IS THE FIX ---
+        # Use .get() to safely add mom_energy_cost only if it exists
         if self.mom_active:
-            total_energy_cost_per_step += self.strategy['mom_energy_cost']
+            total_energy_cost_per_step += self.strategy.get('mom_energy_cost', 0.0) 
         
         battery_power_limit_mj = self.strategy['battery_power_limit_mj_per_step']
         battery_drain = min(total_energy_cost_per_step, battery_power_limit_mj)

@@ -8,8 +8,8 @@ import os
 import random
 
 # --- CONFIGURATION ---
-STARTING_GRID_FILE = "starting_grid.json"
-NUM_RACES = 20 # Run 20 different random simulations of this grid
+DEFAULT_GRID_FILE = "starting_grid.json" # The 22-car simulation
+NUM_RACES = 20 
 # ---------------------
 
 def run_simulation_set(config_file, num_races):
@@ -64,11 +64,15 @@ def analyze_results(title, all_results, num_races):
             winner_name = f"{winner['driver']} ({winner['team']})"
             win_counts[winner_name] += 1
     
-    print("\n 1. WIN TALLY (Top 5):")
+    print("\n 1. WIN TALLY:")
     sorted_wins = sorted(win_counts.items(), key=lambda item: item[1], reverse=True)
-    for driver_team, wins in sorted_wins[:5]: 
+    for driver_team, wins in sorted_wins[:min(5, len(sorted_wins))]: # Show top 5 or fewer
         percentage = (wins / num_races) * 100
         print(f" > {driver_team}: {wins} wins ({percentage:.1f}%)")
+
+    # --- NEW: Check if we should skip the detailed analysis ---
+    if title == "two_car_grid.json":
+        return # Stop here, don't print the detailed analysis
 
     # --- 2. HAAS "ENERGY STRATEGY" REASON ENGINE ---
     haas_stats = {
@@ -77,75 +81,97 @@ def analyze_results(title, all_results, num_races):
     }
     
     # Load the grid config ONCE to get starting positions
-    with open(STARTING_GRID_FILE, 'r') as f:
+    with open(title, 'r') as f: # Use the title, which is the config file name
         grid_config = json.load(f)
     starting_positions = {entry['driver']: entry['pos'] for entry in grid_config['grid']}
 
     for race in all_results:
         for driver in race:
             start_pos = starting_positions.get(driver['driver'], -1)
+            positions_gained = -99 # Default for DNF
+            
+            if driver["status"] in ["RACING", "FINISHED"]:
+                positions_gained = start_pos - driver['final_rank']
             
             if driver["driver"] == "Ocon":
                 haas_stats["Ocon"]["ranks"].append(driver["final_rank"])
+                if driver["status"] == "FINISHED":
+                    haas_stats["Ocon"]["race_times"].append(driver["total_race_time_s"])
+                    haas_stats["Ocon"]["positions_gained"].append(positions_gained)
                 haas_stats["Ocon"]["fuel_left"].append(driver["final_fuel_mj"])
                 haas_stats["Ocon"]["mom_uses"].append(driver["mom_uses"])
                 haas_stats["Ocon"]["status"][driver["status"]] += 1
-                if driver["status"] == "FINISHED":
-                    haas_stats["Ocon"]["race_times"].append(driver["total_race_time_s"])
-                    haas_stats["Ocon"]["positions_gained"].append(start_pos - driver['final_rank'])
-                    
+                
             elif driver["driver"] == "Bearman":
                 haas_stats["Bearman"]["ranks"].append(driver["final_rank"])
+                if driver["status"] == "FINISHED":
+                    haas_stats["Bearman"]["race_times"].append(driver["total_race_time_s"])
+                    haas_stats["Bearman"]["positions_gained"].append(positions_gained)
                 haas_stats["Bearman"]["fuel_left"].append(driver["final_fuel_mj"])
                 haas_stats["Bearman"]["mom_uses"].append(driver["mom_uses"])
                 haas_stats["Bearman"]["status"][driver["status"]] += 1
-                if driver["status"] == "FINISHED":
-                    haas_stats["Bearman"]["race_times"].append(driver["total_race_time_s"])
-                    haas_stats["Bearman"]["positions_gained"].append(start_pos - driver['final_rank'])
     
     print("\n 2. HAAS STRATEGY ANALYSIS (Avg. over 20 races):")
     
     # Ocon Analysis
-    ocon_avg_rank = statistics.mean(haas_stats["Ocon"]["ranks"])
-    ocon_avg_time = statistics.mean(haas_stats["Ocon"]["race_times"]) if haas_stats["Ocon"]["race_times"] else 0
-    ocon_avg_fuel = statistics.mean(haas_stats["Ocon"]["fuel_left"])
-    ocon_avg_mom = statistics.mean(haas_stats["Ocon"]["mom_uses"])
-    ocon_avg_pos_gained = statistics.mean(haas_stats["Ocon"]["positions_gained"]) if haas_stats["Ocon"]["positions_gained"] else 0
-    ocon_dnfs = haas_stats["Ocon"]["status"]["CRASHED"] + haas_stats["Ocon"]["status"]["OUT_OF_ENERGY"]
-    
-    print("\n  Ocon (Energy BURN Strategy):")
-    print(f"    > Avg. Finishing Position: P{ocon_avg_rank:.1f}")
-    print(f"    > Avg. Positions Gained/Lost (on finish): {ocon_avg_pos_gained:+.1f}")
-    print(f"    > Avg. Total Race Time (on finish): {ocon_avg_time:.1f} s")
-    print(f"    > Avg. MOM Uses: {ocon_avg_mom:.1f}")
-    print(f"    > Avg. Final Fuel Remaining: {ocon_avg_fuel:.1f} MJ")
-    print(f"    > Total DNFs (Crashes/Fuel): {ocon_dnfs}")
+    if haas_stats["Ocon"]["ranks"]:
+        ocon_avg_rank = statistics.mean(haas_stats["Ocon"]["ranks"])
+        ocon_avg_time = statistics.mean(haas_stats["Ocon"]["race_times"]) if haas_stats["Ocon"]["race_times"] else 0
+        ocon_avg_fuel = statistics.mean(haas_stats["Ocon"]["fuel_left"])
+        ocon_avg_mom = statistics.mean(haas_stats["Ocon"]["mom_uses"])
+        ocon_avg_pos_gained = statistics.mean(haas_stats["Ocon"]["positions_gained"]) if haas_stats["Ocon"]["positions_gained"] else 0
+        ocon_dnfs = haas_stats["Ocon"]["status"]["CRASHED"] + haas_stats["Ocon"]["status"]["OUT_OF_ENERGY"]
+        
+        # Get Ocon's strategy file name from the grid
+        ocon_strategy_file = "N/A"
+        if 'Ocon' in starting_positions:
+             ocon_strategy_file = grid_config['grid'][starting_positions['Ocon']-1]['strategy_file']
+        
+        print(f"\n  Ocon ({ocon_strategy_file}):")
+        print(f"    > Avg. Finishing Position: P{ocon_avg_rank:.1f}")
+        print(f"    > Avg. Positions Gained/Lost (on finish): {ocon_avg_pos_gained:+.1f}")
+        print(f"    > Avg. Total Race Time (on finish): {ocon_avg_time:.1f} s")
+        print(f"    > Avg. MOM Uses: {ocon_avg_mom:.1f}")
+        print(f"    > Avg. Final Fuel Remaining: {ocon_avg_fuel:.1f} MJ")
+        print(f"    > Total DNFs (Crashes/Fuel): {ocon_dnfs}")
 
     
     # Bearman Analysis
-    bearman_avg_rank = statistics.mean(haas_stats["Bearman"]["ranks"])
-    bearman_avg_time = statistics.mean(haas_stats["Bearman"]["race_times"]) if haas_stats["Bearman"]["race_times"] else 0
-    bearman_avg_fuel = statistics.mean(haas_stats["Bearman"]["fuel_left"])
-    bearman_avg_mom = statistics.mean(haas_stats["Bearman"]["mom_uses"])
-    bearman_avg_pos_gained = statistics.mean(haas_stats["Bearman"]["positions_gained"]) if haas_stats["Bearman"]["positions_gained"] else 0
-    bearman_dnfs = haas_stats["Bearman"]["status"]["CRASHED"] + haas_stats["Bearman"]["status"]["OUT_OF_ENERGY"]
-    
-    print("\n  Bearman (Energy SAVE Strategy):")
-    print(f"    > Avg. Finishing Position: P{bearman_avg_rank:.1f}")
-    print(f"    > Avg. Positions Gained/Lost (on finish): {bearman_avg_pos_gained:+.1f}")
-    print(f"    > Avg. Total Race Time (on finish): {bearman_avg_time:.1f} s")
-    print(f"    > Avg. MOM Uses: {bearman_avg_mom:.1f}")
-    print(f"    > Avg. Final Fuel Remaining: {bearman_avg_fuel:.1f} MJ")
-    print(f"    > Total DNFs (Crashes/Fuel): {bearman_dnfs}")
+    if haas_stats["Bearman"]["ranks"]:
+        bearman_avg_rank = statistics.mean(haas_stats["Bearman"]["ranks"])
+        bearman_avg_time = statistics.mean(haas_stats["Bearman"]["race_times"]) if haas_stats["Bearman"]["race_times"] else 0
+        bearman_avg_fuel = statistics.mean(haas_stats["Bearman"]["fuel_left"])
+        bearman_avg_mom = statistics.mean(haas_stats["Bearman"]["mom_uses"])
+        bearman_avg_pos_gained = statistics.mean(haas_stats["Bearman"]["positions_gained"]) if haas_stats["Bearman"]["positions_gained"] else 0
+        bearman_dnfs = haas_stats["Bearman"]["status"]["CRASHED"] + haas_stats["Bearman"]["status"]["OUT_OF_ENERGY"]
+        
+        # Get Bearman's strategy file name from the grid
+        bearman_strategy_file = "N/A"
+        if 'Bearman' in starting_positions:
+            bearman_strategy_file = grid_config['grid'][starting_positions['Bearman']-1]['strategy_file']
+
+        print(f"\n  Bearman ({bearman_strategy_file}):")
+        print(f"    > Avg. Finishing Position: P{bearman_avg_rank:.1f}")
+        print(f"    > Avg. Positions Gained/Lost (on finish): {bearman_avg_pos_gained:+.1f}")
+        print(f"    > Avg. Total Race Time (on finish): {bearman_avg_time:.1f} s")
+        print(f"    > Avg. MOM Uses: {bearman_avg_mom:.1f}")
+        print(f"    > Avg. Final Fuel Remaining: {bearman_avg_fuel:.1f} MJ")
+        print(f"    > Total DNFs (Crashes/Fuel): {bearman_dnfs}")
 
 if __name__ == "__main__":
-    if not os.path.exists(STARTING_GRID_FILE):
-        print(f"Error: Config file not found: {STARTING_GRID_FILE}")
+    # --- NEW: Accept command-line argument ---
+    if len(sys.argv) > 1:
+        config_to_run = sys.argv[1]
+    else:
+        config_to_run = DEFAULT_GRID_FILE
+
+    if not os.path.exists(config_to_run):
+        print(f"Error: Config file not found: {config_to_run}")
         sys.exit(1)
     
     print("--- Starting Strategic Monte Carlo Analyzer ---")
     
-    wins, results = run_simulation_set(STARTING_GRID_FILE, NUM_RACES)
-    analyze_results(f"Strategy Analysis: {STARTING_GRID_FILE}", results, NUM_RACES)
+    wins, results = run_simulation_set(config_to_run, NUM_RACES)
+    analyze_results(config_to_run, results, NUM_RACES)
     
     print("\n--- Strategic Analysis Complete ---")

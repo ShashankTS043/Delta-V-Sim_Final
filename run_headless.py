@@ -14,7 +14,7 @@ def run_single_race(config_file_path, seed):
         config = json.load(f)
     
     race_laps = config['simulation_params']['race_laps']
-    RACE_TIME_SECONDS = race_laps * 92 # ~100s per lap (safe buffer)
+    RACE_TIME_SECONDS = race_laps * 92 # ~92s per lap (safe buffer)
     
     # Pass the seed to the model
     model = DeltaVModel(config_file_path=config_file_path, seed=seed)
@@ -34,8 +34,6 @@ def run_single_race(config_file_path, seed):
             "final_fuel_mj": round(agent.fuel_energy_remaining, 2),
             "final_tyre_life_pct": round(agent.tyre_life_remaining * 100, 2), 
             "final_tyre_compound": agent.tyre_compound,
-            
-            # --- Day 5 Stats ---
             "pit_stops_made": agent.pit_stops_made,
             "mom_uses": agent.mom_uses_count,
             "time_on_softs_s": round(agent.time_on_softs_s, 1),

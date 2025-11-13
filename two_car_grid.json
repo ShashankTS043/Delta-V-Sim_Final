@@ -1,0 +1,22 @@
+{
+  "simulation_params": {
+    "race_laps": 57,
+    "time_step": 0.1
+  },
+  "grid": [
+    {
+      "pos": 1, 
+      "driver": "Ocon", 
+      "team": "Haas", 
+      "strategy_file": "haas_strategy_burn_map.json", 
+      "tyre": "medium"
+    },
+    {
+      "pos": 2, 
+      "driver": "Bearman", 
+      "team": "Haas", 
+      "strategy_file": "haas_strategy_save_map.json", 
+      "tyre": "medium"
+    }
+  ]
+}
