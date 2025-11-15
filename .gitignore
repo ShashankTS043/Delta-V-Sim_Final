@@ -9,3 +9,5 @@ venv/
 data.json
 config_aggressive.json
 config_conservative.json
+telemetry_history.json
+data_snapshot_*.json

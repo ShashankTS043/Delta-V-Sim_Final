@@ -1,0 +1,13 @@
+# Core Simulation
+mesa
+simpy
+networkx
+
+# Data Handling
+numpy
+pandas
+
+# Visualization (for your teammate)
+matplotlib
+pygame
+ttkthemes
