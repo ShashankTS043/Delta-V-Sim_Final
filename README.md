@@ -1,118 +1,83 @@
-Delta-V Sim: The 2026 F1 "Reason Engine"
-[TrackShift Innovation Challenge 2025]
+# Delta-V Sim: F1 Strategy Simulator
 
-Delta-V Sim is a professional-grade, stochastic race simulator built in Python to model the complex strategic landscape of the 2026 Formula 1 regulations.
+**TrackShift Innovation Challenge 2025 Submission**
 
-It's not just a visualizer; it's a powerful "Reason Engine" designed to analyze the deep, counter-intuitive trade-offs between Tyre Wear, Fuel Burn, and Battery Deployment.
+Delta-V Sim is a professional-grade, stochastic Formula 1 strategy simulator. Built as a "digital twin," it models the complex interplay between energy management (MOM), tyre degradation, and race events to allow teams to test and validate strategies in a virtual environment.
 
-This platform is built on a "Universal AI" architecture, allowing it to run two distinct, high-level simulation modes:
 
-A 22-Car Stochastic Race (Pro+): A full-grid simulation to test how a randomized energy strategy (e.g., mom_aggressiveness: 0.9) performs against 20 unique AI opponents, random VSCs, and random driver errors.
 
-A 2-Car "Dyno Test" (Pro++): A 1v1 "dyno" to compare two specific, deterministic, segment-by-segment "Energy Maps" (e.g., "Deploy on all straights" vs. "Tactical Save").
+---
 
-1. The Problem: The 2026 "Energy Reset"
-The 2026 F1 regulations are the biggest strategic shift in decades. Winning will no longer be about the fastest car, but the smartest strategy.
+##  Core Features
 
-New 50/50 Power Unit: A 350kW MGU-K (battery) and a 4600 MJ (110kg) fuel tank (ICE) force a constant, complex trade-off between the two power sources.
+* **Universal AI Architecture:** The core `agent.py` "brain" can operate in two distinct modes based on the strategy file provided:
+    * **"Pro+ Mode" (Stochastic Race):** A full 22-car simulation with random events (VSCs, Driver Errors) to test high-level "aggressive" vs. "conservative" strategies.
+    * **"Pro++ Mode" (Deterministic Dyno):** A 1v1 "dyno test" to compare two specific, deterministic `energy_deployment_map` strategies against each other.
+* **"Reason Engine":** A headless Monte Carlo analyzer (`monte_carlo.py`) that runs hundreds of simulations to provide statistical validation of a strategy's performance.
+* **"God-Mode" Dashboard:** A Tkinter-based "Race Control" panel that can inject live events (like a Virtual Safety Car) into the simulation in real-time.
+* **High-Fidelity Physics:** The simulation models track segments, corner radii, tyre cliffs, battery SoC, fuel burn, and the full 2026-spec aero (X-Mode & Z-Mode) and MOM (Manual Overtake Mode) power unit regulations.
 
-Advanced MOM Physics: The new "push-to-pass" system is not a simple button. It's a complex regulation:
+---
 
-Standard: Electrical power tapers off after 290 kph.
+## Repository Structure
 
-MOM Active: A driver can choose to push to 337 kph, but at the cost of 0.5 MJ of extra battery energy.
+This repository is organized into three distinct branches:
 
-2. Our Solution: A "Reason Engine"
-Delta-V Sim is a platform that lets a team like MoneyGram Haas F1 run thousands of 57-lap race simulations to find the optimal strategy before the first race.
+* **`main`:** Contains this README, the `LICENSE`, and other project-wide metadata. **No code lives here.**
+* **`Backend`:** Contains all the core simulation logic. This includes the `agent.py`, `model.py`, `track_graph.py`, and the `monte_carlo.py` "Reason Engine."
+* **`Frontend`:** Contains the `dashboard.py` Tkinter application for the "God-Mode" Race Control panel.
 
-Our "Reason Engine" (monte_carlo.py) can answer deep strategic questions:
+---
 
-Pro+ (22-Car): "In a full, chaotic race, is an 'Energy Burn' (high-MOM) or 'Energy Save' (low-MOM) strategy statistically faster and more reliable?"
+## How to Run
 
-Pro++ (2-Car): "Is it faster to deploy MOM on all straights, or to save it for the long straights? What is the exact fuel cost and lap time trade-off of these two 'Energy Maps'?"
+### 1. Backend Simulation (The "Reason Engine")
 
-3. Core Features
-"Universal Agent" AI: The core of the simulation. A single agent.py "brain" that automatically detects its strategy type.
+To run a full stochastic analysis of a strategy:
 
-If mom_aggressiveness is found: It runs in "Pro+" mode, using random chance to deploy MOM.
+1.  Switch to the `Backend` branch:
+    ```bash
+    git checkout Backend
+    ```
+2.  Install dependencies:
+    ```bash
+    pip install -r requirements.txt
+    ```
+3.  Run the Monte Carlo analyzer, pointing it at a grid file:
+    ```bash
+    python monte_carlo.py starting_grid.json
+    ```
 
-If energy_deployment_map is found: It runs in "Pro++" mode, executing a perfect, deterministic energy plan from its strategy file.
+### 2. Live "God-Mode" Simulation
 
-Full 50/50 Power Unit: A realistic physics model where agents must manage both the fuel_energy_remaining (ICE) and the regenerating battery_soc (MGU-K). Energy costs are tuned so that fuel is a critical, race-deciding resource.
+This requires two terminals.
 
-Advanced 2026 MOM Physics: Implements the real 2026 "push-to-pass" regulation. Standard cars are capped at 290 kph, but activating MOM grants 0.5 MJ of extra battery energy and raises the speed limit to 337 kph.
+**Terminal 1 (Run the Simulator):**
 
-Realistic 57-Lap Race Model:
+1.  Switch to the `Backend` branch:
+    ```bash
+    git checkout Backend
+    ```
+2.  Start the live simulator:
+    ```bash
+    python run.py starting_grid.json
+    ```
+    *(The simulation will now listen for commands from `commands.json`)*
 
-Tyre Wear: A 3-compound (S/M/H) tyre model tuned so that a 0-stop strategy is impossible.
+**Terminal 2 (Run the Dashboard):**
 
-Pit Stop AI: Agents' "brains" (perceive()) correctly monitor tyre wear and pit window openings to execute multi-stop strategies.
+1.  Switch to the `Frontend` branch:
+    ```bash
+    git checkout Frontend
+    ```
+2.  Start the "God-Mode" dashboard:
+    ```bash
+    python dashboard.py
+    ```
+    *(You can now use the dashboard to trigger a VSC in the running simulation.)*
 
-Chequered Flag: The simulation ends exactly when the winner completes Lap 57.
+---
 
-Stochastic World Engine:
+## Contributors
 
-"Strategy Noise": All 20 "field" cars have their physics (top speed, grip) randomized to ensure no two races are identical.
-
-Random VSCs: The "Race Master" (model.py) deploys random Virtual Safety Cars.
-
-Driver Error: Every agent has a tiny, random chance on each step to make a mistake and crash.
-
-4. Core Architecture
-Simulation Core (Mesa): We use Mesa to give each F1Agent an autonomous "brain" to perceive its environment and make decisions.
-
-Environment & Track (NetworkX): The racetrack is a networkx directed graph of 15 turns (Bahrain) with a full, multi-segment pit lane.
-
-Data & Analytics (JSON/Python): The "Reason Engine" (monte_carlo.py) runs headless simulations, gathers JSON reports, and performs a final statistical analysis.
-
-Visualization (Pygame & Matplotlib): A decoupled frontend reads the live data.json to show the 2D race and data leaderboards.
-
-5. How to Run
-This project uses Python 3.12+ and a virtual environment.
-
-1. Local Setup
-Bash
-
-# Clone the repository
-git clone https://github.com/ShashankTS043/Delta-V-Sim.git
-cd Delta-V-Sim
-
-# Create and activate the virtual environment
-# On macOS
-python3 -m venv venv
-source venv/bin/activate
-# On Windows
-# python -m venv venv
-# .\venv\Scripts\activate
-
-# Install all required libraries
-pip install -r requirements.txt
-2. Run the Live 22-Car Simulation (Visual Mode)
-This runs the full 22-car race (using starting_grid.json) and outputs the live data.json file for your frontend visualizer.
-
-Bash
-
-python3 run.py
-3. Run the "Reason Engine" (Headless Analysis)
-This is the main analysis tool. It runs 20 full, headless 57-lap races and prints a final strategic summary.
-
-To run the 22-car "Pro+" simulation (Random MOM):
-
-Bash
-
-# This is the default
-python3 monte_carlo.py
-
-# You can also specify the grid file
-python3 monte_carlo.py starting_grid.json
-To run the 2-car "Pro++" Dyno Test (Energy Maps):
-
-Bash
-
-python3 monte_carlo.py two_car_grid.json
-6. Our Team
-Shashank T S
-
-Shreekesh S
-
-Arjun H Athreya
+Please see the `CONTRIBUTING.md` file for details on how to contribute to this project.
