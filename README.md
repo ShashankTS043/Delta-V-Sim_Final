@@ -11,8 +11,8 @@ Delta-V Sim is a professional-grade, stochastic Formula 1 strategy simulator. Bu
 ##  Core Features
 
 * **Universal AI Architecture:** The core `agent.py` "brain" can operate in two distinct modes based on the strategy file provided:
-    * **"Pro+ Mode" (Stochastic Race):** A full 22-car simulation with random events (VSCs, Driver Errors) to test high-level "aggressive" vs. "conservative" strategies.
-    * **"Pro++ Mode" (Deterministic Dyno):** A 1v1 "dyno test" to compare two specific, deterministic `energy_deployment_map` strategies against each other.
+    1) **"Pro+ Mode" (Stochastic Race):** A full 22-car simulation with random events (VSCs, Driver Errors) to test high-level "aggressive" vs. "conservative" strategies.
+    2) **"Pro++ Mode" (Deterministic Dyno):** A 1v1 "dyno test" to compare two specific, deterministic `energy_deployment_map` strategies against each other.
 * **"Reason Engine":** A headless Monte Carlo analyzer (`monte_carlo.py`) that runs hundreds of simulations to provide statistical validation of a strategy's performance.
 * **"God-Mode" Dashboard:** A Tkinter-based "Race Control" panel that can inject live events (like a Virtual Safety Car) into the simulation in real-time.
 * **High-Fidelity Physics:** The simulation models track segments, corner radii, tyre cliffs, battery SoC, fuel burn, and the full 2026-spec aero (X-Mode & Z-Mode) and MOM (Manual Overtake Mode) power unit regulations.
