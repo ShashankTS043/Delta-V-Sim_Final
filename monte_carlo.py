@@ -88,28 +88,28 @@ def analyze_results(title, all_results, num_races):
     for race in all_results:
         for driver in race:
             start_pos = starting_positions.get(driver['driver'], -1)
-            positions_gained = -99 # Default for DNF
             
-            if driver["status"] in ["RACING", "FINISHED"]:
-                positions_gained = start_pos - driver['final_rank']
+            # --- THIS IS THE FIX ---
+            # A "survivor" is anyone who didn't DNF
+            is_survivor = driver["status"] in ["RACING", "FINISHED"]
             
             if driver["driver"] == "Ocon":
                 haas_stats["Ocon"]["ranks"].append(driver["final_rank"])
-                if driver["status"] == "FINISHED":
-                    haas_stats["Ocon"]["race_times"].append(driver["total_race_time_s"])
-                    haas_stats["Ocon"]["positions_gained"].append(positions_gained)
                 haas_stats["Ocon"]["fuel_left"].append(driver["final_fuel_mj"])
                 haas_stats["Ocon"]["mom_uses"].append(driver["mom_uses"])
                 haas_stats["Ocon"]["status"][driver["status"]] += 1
-                
+                if is_survivor:
+                    haas_stats["Ocon"]["race_times"].append(driver["total_race_time_s"])
+                    haas_stats["Ocon"]["positions_gained"].append(start_pos - driver['final_rank'])
+                    
             elif driver["driver"] == "Bearman":
                 haas_stats["Bearman"]["ranks"].append(driver["final_rank"])
-                if driver["status"] == "FINISHED":
-                    haas_stats["Bearman"]["race_times"].append(driver["total_race_time_s"])
-                    haas_stats["Bearman"]["positions_gained"].append(positions_gained)
                 haas_stats["Bearman"]["fuel_left"].append(driver["final_fuel_mj"])
                 haas_stats["Bearman"]["mom_uses"].append(driver["mom_uses"])
                 haas_stats["Bearman"]["status"][driver["status"]] += 1
+                if is_survivor:
+                    haas_stats["Bearman"]["race_times"].append(driver["total_race_time_s"])
+                    haas_stats["Bearman"]["positions_gained"].append(start_pos - driver['final_rank'])
     
     print("\n 2. HAAS STRATEGY ANALYSIS (Avg. over 20 races):")
     

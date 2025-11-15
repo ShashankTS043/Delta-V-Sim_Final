@@ -15,9 +15,9 @@
     "grip_factor": 21.3,
     "vsc_speed": 30.0,
 
-    "c_1_power": "9.0e-05",
-    "c_2_z_mode_drag": "9.0e-03",
-    "c_2_x_mode_drag": "3e-03",
+    "c_1_power": "9e-04",
+    "c_2_z_mode_drag": "9e-02",
+    "c_2_x_mode_drag": "3e-02",
 
     "tyre_wear_rate_soft": 0.00065,
     "tyre_wear_rate_medium": 0.00045,
