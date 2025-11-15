@@ -1,5 +1,10 @@
 from mesa import Agent
 import statistics
+import numpy as np 
+
+# --- Define tyre types ---
+DRY_TYRES = ["soft", "medium", "hard"]
+WET_TYRES = ["intermediate"]
 
 class F1Agent(Agent):
     """
@@ -39,6 +44,7 @@ class F1Agent(Agent):
         self.tyre_life_remaining = 1.0 
         self.tyre_grip_modifier = 1.0 
         self.on_cliff = False 
+        self.tyre_temp = 95.0
         
         # --- Pit Stops ---
         self.wants_to_pit = False
@@ -50,6 +56,15 @@ class F1Agent(Agent):
         self.time_on_mediums_s = 0.0
         self.time_on_hards_s = 0.0
         self.mom_uses_count = 0
+        
+        # --- FINAL TELEMETRY ---
+        self.telemetry_history = []
+        self.plank_wear = 0.0
+        self.acceleration_g = 0.0 # <-- RESTORED
+        self.plank_wear_rate_factor = self.strategy.get('plank_wear_factor', 1.0)
+        self.tyre_pressure_factor = self.strategy.get('tyre_pressure_factor', 1.0)
+        self.acceleration_g_factor = self.strategy.get('g_factor', 1.0) # <-- RESTORED FACTOR
+        # --- END FINAL TELEMETRY ---
 
     def step(self):
         self.perceive() 
@@ -84,7 +99,7 @@ class F1Agent(Agent):
         
         if main_track_edge:
             is_detection_point = main_track_edge.get('mom_detection', False)
-            if is_detection_point and agent_in_front and (min_gap < self.strategy["mom_detection_gap"]):
+            if is_detection_point and agent_in_front and (min_gap < self.strategy.get("mom_detection_gap", 10.0)):
                 if not self.mom_available: 
                     print(f"--- AGENT {self.unique_id} GOT MOM! (Gap: {min_gap:.1f}m) ---")
                     # Grant the 0.5 MJ of extra energy
@@ -100,11 +115,26 @@ class F1Agent(Agent):
         if edge_data:
             is_pit_decision_point = edge_data.get('is_pit_entry_decision', False)
             if is_pit_decision_point:
-                can_pit = (self.laps_completed + 1 >= self.strategy['pit_window_open_lap'])
-                should_pit = (self.tyre_life_remaining < self.strategy['pit_tyre_cliff_threshold'])
+                
+                # Check for "emergency" reasons to pit
+                PIT_CLIFF_THRESHOLD = self.strategy.get('pit_tyre_cliff_threshold', 0.10)
+                
+                tyre_worn_out = (self.tyre_life_remaining <= PIT_CLIFF_THRESHOLD)
+                
+                is_on_dry_tyres = self.tyre_compound in DRY_TYRES
+                is_wet = (self.model.weather_state == "WET")
+                wrong_tyre_for_conditions = (is_wet and is_on_dry_tyres) or (not is_wet and not is_on_dry_tyres)
+                
+                # DECISION: Pit if tyres are worn OR if you're on the wrong compound.
+                should_pit = tyre_worn_out or wrong_tyre_for_conditions
+                can_pit = (self.laps_completed > 0) # Can pit anytime after lap 0
+
                 if can_pit and should_pit and self.status == "RACING":
                     self.wants_to_pit = True
-                    print(f"--- AGENT {self.unique_id} DECIDES TO PIT! (Tyre: {self.tyre_life_remaining*100:.0f}%) ---")
+                    if wrong_tyre_for_conditions:
+                        print(f"--- AGENT {self.unique_id} PITS FOR WRONG TYRES! (Weather: {self.model.weather_state}) ---")
+                    else:
+                        print(f"--- AGENT {self.unique_id} DECIDES TO PIT! (Tyre: {self.tyre_life_remaining*100:.0f}%) ---")
                 else:
                     self.wants_to_pit = False
 
@@ -141,14 +171,7 @@ class F1Agent(Agent):
             self.mom_active = False
             return
                 
-        error_chance = self.model.random.random()
-        if error_chance < self.strategy.get("driver_error_rate", 0.000001):
-            if self.status == "RACING": 
-                print(f"--- AGENT {self.unique_id} HAS CRASHED! (Driver Error) ---")
-                self.status = "CRASHED"
-                self.velocity = 0
-                self.mom_active = False
-                return
+        # --- REMOVED RANDOMNESS: Driver Error Check Removed ---
             
         # --- 2. Get current track/pit segment data ---
         current_node = self.position[0]
@@ -188,7 +211,20 @@ class F1Agent(Agent):
             
         else:
             self.aero_mode = "Z-MODE"
-            grip = self.strategy['grip_factor'] * self.tyre_grip_modifier
+            
+            # --- Weather Grip Modifier ---
+            weather_grip_modifier = 1.0
+            is_wet = (self.model.weather_state == "WET")
+            is_on_dry_tyres = self.tyre_compound in DRY_TYRES
+            
+            if is_wet and is_on_dry_tyres:
+                weather_grip_modifier = self.strategy.get('grip_modifier_wet_wrong_tyre', 0.5)
+            elif not is_wet and not is_on_dry_tyres:
+                weather_grip_modifier = self.strategy.get('grip_modifier_dry_wrong_tyre', 0.7)
+            # --- End Weather Grip ---
+                
+            # Combine base grip, wear grip, and weather grip
+            grip = self.strategy['grip_factor'] * self.tyre_grip_modifier * weather_grip_modifier
             
             if track_radius <= 0: base_velocity = 0
             else: base_velocity = (grip * track_radius) ** 0.5
@@ -211,8 +247,8 @@ class F1Agent(Agent):
         
         # --- "Pro+" LOGIC (Random Aggressiveness) ---
         elif "mom_aggressiveness" in self.strategy:
-            use_mom_chance = self.model.random.random() 
-            if self.mom_available and x_mode_allowed and (not edge_data.get('is_pit_lane', False)) and (use_mom_chance < self.strategy['mom_aggressiveness']):
+            # We keep this logic, but aggression is now *deterministic*
+            if self.mom_available and x_mode_allowed and (not edge_data.get('is_pit_lane', False)) and (0.5 < self.strategy['mom_aggressiveness']):
                 should_activate_mom = True
 
         # --- EXECUTE DECISION ---
@@ -234,10 +270,16 @@ class F1Agent(Agent):
             self.time_in_pit_stall += self.model.time_step
             if self.time_in_pit_stall >= self.strategy['pit_time_loss_seconds']:
                 print(f"--- AGENT {self.unique_id} PIT STOP COMPLETE! ---")
-                self.tyre_compound = "medium" if self.tyre_compound == "soft" else "hard"
+                
+                if self.model.weather_state == "WET":
+                    self.tyre_compound = "intermediate"
+                else:
+                    self.tyre_compound = "medium"
+
                 self.tyre_life_remaining = 1.0
                 self.on_cliff = False
                 self.tyre_grip_modifier = 1.0
+                self.tyre_temp = 95.0
                 self.pit_stops_made += 1 
                 self.time_in_pit_stall = 0.0
                 self.wants_to_pit = False
@@ -279,7 +321,7 @@ class F1Agent(Agent):
                 self.lap_times.append(current_lap_time) 
                 self.laps_completed += 1
                 self.mom_available = False # Reset MOM at the end of the lap
-                self.energy_recovered_this_lap_mj = 0.0
+                self.energy_recovered_this_lap_mj = 0.0 # Reset per-lap counter
                 print(f"--- AGENT {self.unique_id} COMPLETED LAP {self.laps_completed}! (Time: {current_lap_time:.2f}s) ---")
                 
                 if self.laps_completed >= self.model.race_laps and not self.model.race_over:
@@ -290,7 +332,7 @@ class F1Agent(Agent):
         else:
             self.position = (current_node, progress_on_edge)
 
-        # --- 4. 50/50 POWER UNIT & ENERGY MODEL ---
+        # --- 4. ENERGY MODEL (Battery-First) ---
         
         C1_POWER = float(self.strategy['c_1_power'])
         if self.aero_mode == "X-MODE":
@@ -302,7 +344,6 @@ class F1Agent(Agent):
         drag_cost = C2_AERO_DRAG
         total_energy_cost_per_step = (power_cost + drag_cost) * self.model.time_step
         
-        # Use .get() to safely add mom_energy_cost only if it exists
         if self.mom_active:
             total_energy_cost_per_step += self.strategy.get('mom_energy_cost', 0.0) 
         
@@ -328,13 +369,15 @@ class F1Agent(Agent):
             self.status = "OUT_OF_ENERGY"
             self.velocity = 0
 
-        # --- C. REGENERATION (In a corner) ---
+        # --- C. REGENERATION (FIXED) ---
         if self.aero_mode == "Z-MODE":
-            regen_factor = self.strategy.get('c_regen_factor', 1e-07)
-            energy_gained = regen_factor * (self.velocity * self.velocity) * self.model.time_step
-            max_regen_limit = self.strategy['max_regen_per_lap_mj']
-            if self.energy_recovered_this_lap_mj + energy_gained > max_regen_limit:
-                energy_gained = max_regen_limit - self.energy_recovered_this_lap_mj
+            
+            # Use a flat, tunable regen-per-second
+            regen_per_second = self.strategy.get('corner_regen_mj_per_second', 0.05)
+            energy_gained = regen_per_second * self.model.time_step
+
+            # (Removed the buggy lap limiter)
+                
             if self.battery_soc < 1.0 and energy_gained > 0:
                 soc_gain = energy_gained / self.battery_capacity_mj
                 self.battery_soc = min(1.0, self.battery_soc + soc_gain)
@@ -348,25 +391,92 @@ class F1Agent(Agent):
             elif self.tyre_compound == "hard":
                 self.time_on_hards_s += self.model.time_step 
                 wear_rate = self.strategy['tyre_wear_rate_hard']
-            else: # Default to medium
+            else: # Default to medium or intermediate
                 self.time_on_mediums_s += self.model.time_step 
                 wear_rate = self.strategy['tyre_wear_rate_medium']
             
             tyre_wear = wear_rate * self.model.time_step
             if self.aero_mode == "Z-MODE": tyre_wear *= 1.5
             if self.mom_active: tyre_wear *= 2.0
+            
+            # --- Weather Tyre Wear ---
+            is_wet = (self.model.weather_state == "WET")
+            is_on_dry_tyres = self.tyre_compound in DRY_TYRES
+            if is_wet and is_on_dry_tyres:
+                tyre_wear *= 5.0 
+            elif not is_wet and not is_on_dry_tyres:
+                tyre_wear *= 5.0 
+            # --- END NEW ---
+
             self.tyre_life_remaining -= tyre_wear
             
-            if not self.on_cliff and (self.tyre_life_remaining <= self.strategy['tyre_grip_cliff_percent']):
+            # --- FIX: Use .get() for safety and define variables ---
+            PIT_CLIFF_THRESHOLD = self.strategy.get('pit_tyre_cliff_threshold', 0.10)
+            TYRE_CLIFF_MODIFIER = self.strategy.get('tyre_cliff_grip_modifier', 0.8)
+
+            if not self.on_cliff and (self.tyre_life_remaining <= PIT_CLIFF_THRESHOLD):
                 self.on_cliff = True
-                self.tyre_grip_modifier = self.strategy['tyre_cliff_grip_modifier']
+                self.tyre_grip_modifier = TYRE_CLIFF_MODIFIER
                 print(f"--- AGENT {self.unique_id} TYRES FELL OFF A CLIFF! GRIP REDUCED. ---")
 
             if self.tyre_life_remaining <= 0:
                 self.tyre_life_remaining = 0
                 self.status = "CRASHED"
                 self.velocity = 0
+
+            # --- TYRE TEMPERATURE MODEL (TUNED) ---
+            base_temp = 95.0
+            temp_gain = 0.0
+            temp_loss = 0.0
+            
+            if self.aero_mode == "Z-MODE":
+                temp_gain = self.strategy.get('temp_gain_corners_per_sec', 1.5)
+            else:
+                temp_loss = self.strategy.get('temp_loss_straights_per_sec', 1.0)
+            
+            if self.mom_active:
+                temp_gain += self.strategy.get('temp_gain_mom_per_sec', 2.0)
+            
+            self.tyre_temp += (temp_gain - temp_loss) * self.model.time_step
+            
+            self.tyre_temp = np.clip(self.tyre_temp, 95.0, 110.0)
+            # --- END NEW ---
             
         # --- 6. Log Total Time ---
         if self.status != "FINISHED":
             self.total_race_time_s += self.model.time_step
+            self.record_telemetry_step() # <-- Call the recording function
+    
+    # --- Telemetry Recording Function ---
+    def record_telemetry_step(self):
+        """Compiles and stores a full historical data point for CSV download."""
+        
+        current_time = self.model.env.now
+        
+        # --- Plank Wear (Simplified: Loss during X-Mode) ---
+        if self.aero_mode == "X-MODE":
+            # Use the car's unique factor
+            self.plank_wear += self.strategy.get('plank_wear_rate', 0.005) * self.model.time_step * self.plank_wear_rate_factor 
+        
+        # --- Tyre Pressure (Simplified: Linear with Temperature) ---
+        # Apply the car's unique factor to the final calculated pressure
+        tyre_pressure_base = 28.0 + (self.tyre_temp - 95.0) * 0.2
+        tyre_pressure = tyre_pressure_base * self.tyre_pressure_factor
+        
+        # --- Final Data Record ---
+        data_point = {
+            'sim_time': round(current_time, 2),
+            'lap': self.laps_completed + 1,
+            'driver': self.unique_id,
+            'status': self.status,
+            'tyre_life_pct': round(self.tyre_life_remaining * 100, 1),
+            'tyre_temp_c': round(self.tyre_temp, 1),
+            'tyre_pressure_psi': round(tyre_pressure, 1), # <-- UPDATED (NOISE ADDED IN MODEL)
+            'soc_percent': round(self.battery_soc * 100, 1),
+            'fuel_mj': round(self.fuel_energy_remaining, 2),
+            'plank_wear_mm': round(self.plank_wear, 3),
+            'front_wing_angle_deg': 12.0 if self.aero_mode == "Z-MODE" else 5.0,
+            # Removed lateral_g
+        }
+        self.telemetry_history.append(data_point)
+    # --- END Telemetry Recording Function ---

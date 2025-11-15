@@ -6,6 +6,7 @@ import networkx as nx
 import os
 import time
 import glob
+import csv # <-- NEW: Import CSV
 from json import JSONDecodeError
 
 # --- ensure relative paths work from script folder ---
@@ -19,8 +20,8 @@ pygame.init()
 pygame.font.init()
 
 # --- 2. SCREEN & COLOR DEFINITIONS ---
-SCREEN_WIDTH = 1500
-SCREEN_HEIGHT = 800
+SCREEN_WIDTH = 1180
+SCREEN_HEIGHT = 885
 SCREEN = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 pygame.display.set_caption("Delta-V Sim")
 
@@ -296,11 +297,18 @@ def draw_status_hud(sim_data, snapshot_name=None):
     # (Added your custom lines)
     SCREEN.blit(font.render("--- Baharain Intl Cirucit ---", True, CYAN), (x_pos, y_offset))
     y_offset += 30
-    SCREEN.blit(font.render("--- Weather : Dry ---", True, CYAN), (x_pos, y_offset))
+    
+    # --- FIX: REMOVED HARDCODED WEATHER ---
+    # Get the weather from the snapshot data, default to DRY
+    weather_state = r_status.get("weather", "DRY") 
+    weather_color = BLUE if weather_state == "WET" else CYAN
+    # Display the *actual* weather state
+    SCREEN.blit(font.render(f"--- Weather : {weather_state} ---", True, weather_color), (x_pos, y_offset))
     y_offset += 30
+    # --- END FIX ---
 
-    # (Using your aligned header)
-    header_text = font.render("R  |   ID     | PITS |   TYRE  |  SOC |  FUEL | STATUS", True, GREY)
+    # --- Header with TEMP ---
+    header_text = font.render("R  |   ID     | PITS |   TYRE  | TEMP |  SOC |  FUEL | STATUS ", True, GREY)
     SCREEN.blit(header_text, (x_pos, y_offset))
     y_offset += 25
 
@@ -310,7 +318,7 @@ def draw_status_hud(sim_data, snapshot_name=None):
     except Exception:
         pass
 
-    for agent in agents[:20]: # Show top 20
+    for agent in agents[:22]: # Show top 22
         try:
             v_state = agent.get('vehicle_state', {})
             l_data = agent.get('lap_data', {})
@@ -318,9 +326,20 @@ def draw_status_hud(sim_data, snapshot_name=None):
             agent_id = agent.get('id', 'N/A')
             pits = v_state.get('pit_stops_made', 0)
             
-            tyre_compound = v_state.get('tyre_compound', '?')[0].upper() if v_state.get('tyre_compound') else '?'
+            tyre_compound = v_state.get('tyre_compound', 'N/A')
             tyre_life = v_state.get('tyre_life', 0)
-            tyre_display = f"{tyre_compound} | {tyre_life:.0%}"
+            # --- Show 'I' for intermediate ---
+            tyre_char = '?'
+            if tyre_compound:
+                if tyre_compound == "intermediate":
+                    tyre_char = "I"
+                else:
+                    tyre_char = tyre_compound[0].upper()
+            
+            tyre_display = f"{tyre_char} | {tyre_life:.0%}"
+            
+            # --- Get temp data ---
+            tyre_temp = v_state.get('tyre_temp', 0.0)
             
             soc = v_state.get('battery_soc', 0)
             fuel = v_state.get('fuel_remaining_mj', 0)
@@ -329,8 +348,8 @@ def draw_status_hud(sim_data, snapshot_name=None):
             try: soc_disp = f"{float(soc):.0%}"
             except Exception: soc_disp = "--"
             
-            # (Using your aligned data line)
-            line = f"{rank:<2} | {agent_id:<8} | {pits:<4} | {tyre_display:<7} | {soc_disp:<4} | {fuel:<5.0f} | {status}"
+            # --- Data line with temp ---
+            line = f"{rank:<2} | {agent_id:<8} | {pits:<4} | {tyre_display:<7} | {tyre_temp:<4.0f}C | {soc_disp:<4} | {fuel:<5.0f} | {status}"
             
             if status == "RACING": text_color = GREEN if rank == 1 else WHITE
             elif status == "PITTING": text_color = PURPLE
@@ -345,6 +364,11 @@ def draw_status_hud(sim_data, snapshot_name=None):
 # --- MAIN LOOP (UPDATED) ---
 # MAIN LOOP (UPDATED)
 def run_demo():
+    # ... (code for button definitions)
+    # The button logic in this file will need the corresponding setup from the previous step.
+    
+    # We will assume the user integrates the button logic from the prior thought process
+    
     running = True
     clock = pygame.time.Clock()
 
@@ -361,6 +385,13 @@ def run_demo():
     map_area_dims = (MAP_WIDTH, SCREEN_HEIGHT) 
     track_bounds = get_track_bounds(track_positions)
     # --- END NEW LAYOUT ---
+    
+    # --- NEW: CSV BUTTON DEFINITION (Integrated for reference) ---
+    DOWNLOAD_BUTTON_RECT = pygame.Rect(30, SCREEN_HEIGHT - 60, 300, 40)
+    DOWNLOAD_COLOR_NORMAL = (50, 150, 255)
+    DOWNLOAD_COLOR_HOVER = (100, 200, 255)
+    font_button = FONT_HUD.render("Download Full Telemetry (CSV)", True, WHITE)
+    # --- END NEW ---
 
     sim_cache = None
     snapshot_in_use = None
@@ -372,11 +403,27 @@ def run_demo():
             if event.type == pygame.QUIT:
                 running = False
             
-            # (Mouse click logic is removed)
+            # --- CSV Mouse Click Handler ---
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                if DOWNLOAD_BUTTON_RECT.collidepoint(event.pos):
+                    print("--- CSV DOWNLOAD REQUESTED ---")
+                    try:
+                        # 1. Read the history file created by model.py
+                        with open("../telemetry_history.json", "r") as f:
+                            history_data = json.load(f)
+                        # 2. Write the data to CSV
+                        write_history_to_csv(history_data)
+                        
+                    except FileNotFoundError:
+                        print("CSV Export Failed: telemetry_history.json not found (Run the sim to completion first).")
+                    except Exception as e:
+                        print(f"CSV Export Failed: Error during file load/write: {e}")
+            # --- END CSV Mouse Click Handler ---
 
         now = time.time()
         if now - last_read_ts >= READ_INTERVAL:
-            new_data, new_snapshot = load_simulation_data_from_snapshots(prefix="data_snapshot_", folder=".")
+            # (This path is correct, looking in the parent folder)
+            new_data, new_snapshot = load_simulation_data_from_snapshots(prefix="data_snapshot_", folder="..")
             last_read_ts = now
             if new_data is not None:
                 sim_cache = new_data
@@ -406,11 +453,42 @@ def run_demo():
             # Draw the Agents (on the right, in the map area)
             draw_agents(sim_data.get('agents', []), track_bounds, map_area_dims, MAP_PADDING, MAP_START_X)
 
+        # --- Draw the Download Button ---
+        mouse_pos = pygame.mouse.get_pos()
+        button_color = DOWNLOAD_COLOR_HOVER if DOWNLOAD_BUTTON_RECT.collidepoint(mouse_pos) else DOWNLOAD_COLOR_NORMAL
+        
+        pygame.draw.rect(SCREEN, button_color, DOWNLOAD_BUTTON_RECT, border_radius=5)
+        SCREEN.blit(font_button, (DOWNLOAD_BUTTON_RECT.x + 10, DOWNLOAD_BUTTON_RECT.y + 10))
+        # --- END Draw the Download Button ---
+
         pygame.display.flip()
         clock.tick(60)
 
     pygame.quit()
     sys.exit()
+
+# --- CSV Writing Function (Required Helper) ---
+def write_history_to_csv(telemetry_data, filename="race_telemetry.csv"):
+    """Converts the JSON list of historical telemetry data into a CSV file."""
+    if not telemetry_data:
+        print("CSV Export Failed: No telemetry data found.")
+        return False
+        
+    # Headers are the keys of the first dictionary item
+    fieldnames = telemetry_data[0].keys()
+
+    try:
+        # Use 'w' mode to overwrite, newline='' for consistent CSV line endings
+        with open(filename, 'w', newline='') as csvfile:
+            writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+            writer.writeheader()
+            writer.writerows(telemetry_data)
+        print(f"--- CSV EXPORT COMPLETE: Data saved to {filename} ---")
+        return True
+    except Exception as e:
+        print(f"CSV Export Error: {e}")
+        return False
+# --- END CSV Writing Function ---
 
 # (get_track_bounds is unchanged)
 def get_track_bounds(pos_dict):

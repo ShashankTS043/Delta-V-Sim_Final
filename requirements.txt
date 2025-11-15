@@ -10,3 +10,4 @@ pandas
 # Visualization (for your teammate)
 matplotlib
 pygame
+ttkthemes
